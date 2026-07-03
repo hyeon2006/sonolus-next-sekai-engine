@@ -66,6 +66,8 @@ class LifeManager:
     max_life: int
     decrease_life: int
     first: float
+    # Internal life units per displayed HP point (1 legacy, GAUGE_LIFE_UNIT for gauge levels).
+    scale: int
 
 
 class NeumaierSum(Record):
@@ -546,6 +548,9 @@ def draw_life_number(number: int, z: ZIndex, alpha: float = 1.0):
         return
 
     ui = runtime_ui()
+
+    # Gauge levels pass a scaled-down value that may be fractional.
+    number = floor(number)
 
     if number == 0:
         digit_count = 1
