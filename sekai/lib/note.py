@@ -77,8 +77,8 @@ from sekai.lib.layout import (
     tilt_depth,
     visible_lane_range_at,
 )
-from sekai.lib.level_config import LevelConfig
-from sekai.lib.options import Options, ScoreMode, Version, VibrateMode
+from sekai.lib.level_config import GAUGE_LIFE_UNIT, GAUGE_MAX_LIFE, EngineRevision, LevelConfig
+from sekai.lib.options import GaugeMode, Options, ScoreMode, Version, VibrateMode
 from sekai.lib.particle import (
     EMPTY_NOTE_PARTICLE_SET,
     ActiveParticles,
@@ -232,10 +232,79 @@ def init_score(note_archetypes: Iterable[type[PlayArchetype | WatchArchetype]]):
 def init_life(
     note_archetypes: Iterable[type[PlayArchetype | WatchArchetype]],
     initial_life: int,
+    total_combo: int,
 ):
+    if LevelConfig.revision >= EngineRevision.GAUGE_REWORK:
+        init_gauge_life(note_archetypes, initial_life, total_combo)
+    else:
+        for note_archetype in note_archetypes:
+            init_note_life(note_archetype)
+        level_life().update(initial=initial_life, maximum=max(2000, initial_life + 1000))
+
+
+def init_gauge_life(
+    note_archetypes: Iterable[type[PlayArchetype | WatchArchetype]],
+    initial_life: int,
+    total_combo: int,
+):
+    perfect_base = 0
+    great_base = 0
+    good_base = 0
+    miss_base = 0
+    match Options.gauge:
+        case GaugeMode.HEAVY:
+            perfect_base = 3
+            great_base = 0
+            good_base = -75
+            miss_base = -150
+        case GaugeMode.ULTIMA:
+            perfect_base = 2
+            great_base = -50
+            good_base = -100
+            miss_base = -200
+        case _:
+            perfect_base = 3
+            great_base = 2
+            good_base = -25
+            miss_base = -50
+    # Increments are normalized by chart length so a full run has the same total life budget on
+    # every chart: displayed delta per note = base * 2000 / total_combo.
+    scale = GAUGE_LIFE_UNIT * 2000 / max(total_combo, 1)
     for note_archetype in note_archetypes:
-        init_note_life(note_archetype)
-    level_life().update(initial=initial_life, maximum=max(2000, initial_life + 1000))
+        kind = cast(NoteKind, note_archetype.key)
+        factor = 1.0
+        match kind:
+            case (
+                NoteKind.NORM_TRACE
+                | NoteKind.CRIT_TRACE
+                | NoteKind.NORM_HEAD_TRACE
+                | NoteKind.CRIT_HEAD_TRACE
+                | NoteKind.NORM_TAIL_TRACE
+                | NoteKind.CRIT_TAIL_TRACE
+                | NoteKind.NORM_TRACE_FLICK
+                | NoteKind.CRIT_TRACE_FLICK
+                | NoteKind.NORM_HEAD_TRACE_FLICK
+                | NoteKind.CRIT_HEAD_TRACE_FLICK
+                | NoteKind.NORM_TAIL_TRACE_FLICK
+                | NoteKind.CRIT_TAIL_TRACE_FLICK
+                | NoteKind.NORM_TICK
+                | NoteKind.CRIT_TICK
+                | NoteKind.HIDE_TICK
+                | NoteKind.DAMAGE
+            ):
+                factor = 0.5
+            case NoteKind.ANCHOR:
+                factor = 0.0
+            case _:
+                factor = 1.0
+        if factor > 0:
+            note_archetype.life.update(
+                perfect_increment=floor(perfect_base * scale * factor),
+                great_increment=floor(great_base * scale * factor),
+                good_increment=floor(good_base * scale * factor),
+                miss_increment=floor(miss_base * scale * factor),
+            )
+    level_life().update(initial=min(initial_life, 1000) * GAUGE_LIFE_UNIT, maximum=GAUGE_MAX_LIFE)
 
 
 def init_note_life(archetype: type[PlayArchetype | WatchArchetype]):

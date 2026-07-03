@@ -12,7 +12,7 @@ from sonolus.script.archetype import (
 )
 from sonolus.script.globals import level_memory
 from sonolus.script.interval import clamp
-from sonolus.script.runtime import add_life_scheduled, is_replay, is_skip, time
+from sonolus.script.runtime import is_replay, is_skip, time
 from sonolus.script.timing import beat_to_time
 
 from sekai.lib import archetype_names
@@ -64,8 +64,8 @@ class Skill(WatchArchetype):
         self.end_time_effect = self.start_time + self.duration
         if Options.hide_ui != 3 and Options.skill_effect and ActiveSkin.skill_bar_score.is_available:
             Effects.skill.schedule(self.start_time)
-        if self.effect == SkillMode.HEAL:
-            add_life_scheduled(self.value, self.start_time)
+        # Native heal scheduling happens in initialization.count_skill, after LifeManager's life
+        # scale is known (this preprocess runs before WatchInitialization's).
 
     def spawn_time(self):
         return -1e8 if self.count == 0 else self.start_time

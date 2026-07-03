@@ -8,8 +8,13 @@ from sekai.lib.options import Options, ScoreMode, Version
 class EngineRevision(IntEnum):
     BASE = 0
     SONOLUS_1_1_0 = 1
+    GAUGE_REWORK = 2
 
-    LATEST = 1
+    LATEST = 2
+
+
+GAUGE_LIFE_UNIT = 10
+GAUGE_MAX_LIFE = 1000 * GAUGE_LIFE_UNIT
 
 
 @level_data
