@@ -53,11 +53,22 @@ class SkillMode(IntEnum):
     SCORE = 1
     HEAL = 2
     JUDGMENT = 3
+    HIDE_COMBO = 4
+    HIDE_PRIMARY_METRIC = 5
+    HIDE_SECONDARY_METRIC = 6
+    HIDE_JUDGMENT = 7
 
     @classmethod
     def from_options(cls, option_val: int, legacy_val: int) -> "SkillMode":
         option_map = {1: cls.SCORE, 2: cls.HEAL, 3: cls.JUDGMENT}
-        legacy_map = {1: cls.HEAL, 2: cls.JUDGMENT}
+        legacy_map = {
+            1: cls.HEAL,
+            2: cls.JUDGMENT,
+            3: cls.HIDE_COMBO,
+            4: cls.HIDE_PRIMARY_METRIC,
+            5: cls.HIDE_SECONDARY_METRIC,
+            6: cls.HIDE_JUDGMENT,
+        }
 
         return option_map.get(option_val, legacy_map.get(legacy_val, cls.SCORE))
 

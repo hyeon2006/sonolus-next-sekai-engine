@@ -27,7 +27,11 @@ def spawn_custom(
 
 
 class StateManager(WatchArchetype):
-    """Resets score/life/fever level-memory state on skips."""
+    """Resets score/life/fever level-memory state on skips.
+
+    When a skip lands before the first judgment, no ComboJudge or Skill entity is active to
+    rewrite this state, so an always-active entity has to restore the initial values.
+    """
 
     name = archetype_names.STATE_MANAGER
 

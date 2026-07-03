@@ -17,6 +17,7 @@ from sonolus.script.vec import Vec2
 from sekai.lib import archetype_names
 from sekai.lib.baseevent import get_event_as, query_event_list
 from sekai.lib.custom_elements import (
+    SkillHide,
     draw_life_number,
     draw_score_bar_number,
     draw_score_bar_raw_number,
@@ -1265,6 +1266,9 @@ def draw_life_bar(
 ):
     if Options.hide_ui >= 2:
         return
+    alpha = alpha * (1.0 - SkillHide.secondary_hidden)
+    if alpha <= 0:
+        return
     if not ActiveSkin.ui_number.available:
         return
     if not Options.custom_life_bar:
@@ -1301,6 +1305,9 @@ def draw_score_bar(
     alpha,
 ):
     if Options.hide_ui >= 2:
+        return
+    alpha = alpha * (1.0 - SkillHide.primary_hidden)
+    if alpha <= 0:
         return
     if not ActiveSkin.ui_number.available:
         return

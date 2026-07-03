@@ -268,7 +268,7 @@ guide_slide.notes = [
 
 fever_chance = LevelFeverChance(beat=1.0, force=True)
 fever_start = LevelFeverStart(beat=100)
-test_skill = LevelSkill(beat=1.0, effect=2)
+test_skill = LevelSkill(beat=1.0, effect=4)
 
 
 # Full-screen guide overlay: exercises SegmentPresentation.FULL_SCREEN. While a segment is at the

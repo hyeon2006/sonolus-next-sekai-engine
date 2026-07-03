@@ -16,6 +16,7 @@ from sonolus.script.runtime import is_multiplayer, time
 from sonolus.script.timing import beat_to_time
 
 from sekai.lib import archetype_names
+from sekai.lib.custom_elements import apply_skill_hide
 from sekai.lib.effect import Effects
 from sekai.lib.events import (
     Fever,
@@ -61,7 +62,13 @@ class Skill(PlayArchetype):
         self.start_time = beat_to_time(self.beat)
         self.end_time_3 = self.start_time + 3
         self.end_time_effect = self.start_time + self.duration
-        if Options.hide_ui != 3 and Options.skill_effect and ActiveSkin.skill_bar_score.is_available:
+        if (
+            Options.hide_ui != 3
+            and Options.skill_effect
+            and ActiveSkin.skill_bar_score.is_available
+            and self.effect < SkillMode.HIDE_COMBO
+        ):
+            # Hide skills emit no skill alarm sound.
             Effects.skill.schedule(self.start_time)
         # Native heal scheduling happens in initialization.count_skill, after LifeManager's life
         # scale is known (this preprocess runs before Initialization's).
@@ -75,10 +82,12 @@ class Skill(PlayArchetype):
     def update_parallel(self):
         current_time = time()
         elapsed = current_time - self.start_time
-        if current_time < self.end_time_3:
+        # Hide skills draw no skill bar.
+        if current_time < self.end_time_3 and self.effect < SkillMode.HIDE_COMBO:
             draw_skill_bar(elapsed, self.count, self.effect, self.level, self.value, self.scale, self.duration)
+        # SCORE/HEAL finish with the 3s bar; JUDGMENT and hide skills live for their whole effect window.
         if current_time >= self.end_time_3 and (
-            self.effect != SkillMode.JUDGMENT or current_time >= self.end_time_effect
+            self.effect < SkillMode.JUDGMENT or current_time >= self.end_time_effect
         ):
             self.despawn = True
             return
@@ -94,6 +103,8 @@ class Skill(PlayArchetype):
                 SkillActive.judgment = True
             SkillActive.start_time = self.start_time
             SkillActive.duration = self.duration
+        if self.effect >= SkillMode.HIDE_COMBO:
+            apply_skill_hide(self.effect, self.start_time, self.end_time_effect, time())
         if not self.check and custom_elements.LifeManager.life > 0 and self.effect == SkillMode.HEAL:
             custom_elements.LifeManager.life += self.value * custom_elements.LifeManager.scale
             custom_elements.LifeManager.life = clamp(
