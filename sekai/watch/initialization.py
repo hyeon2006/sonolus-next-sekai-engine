@@ -222,7 +222,8 @@ def setting_combo(head: int, skill: int) -> None:
 
     while ptr > 0:
         if skill_ptr > 0 and note.WatchBaseNote.at(ptr).target_time >= Skill.at(skill_ptr).start_time:
-            if Skill.at(skill_ptr).effect == SkillMode.HEAL:
+            if Skill.at(skill_ptr).effect == SkillMode.HEAL or Skill.at(skill_ptr).effect >= SkillMode.HIDE_COMBO:
+                # HEAL and hide skills do not affect note score; skip past them.
                 skill_ptr = Skill.at(skill_ptr).next_ref.index
             elif Skill.at(skill_ptr).effect == SkillMode.SCORE or Skill.at(skill_ptr).effect == SkillMode.JUDGMENT:
                 if Skill.at(skill_ptr).effect == SkillMode.SCORE:

@@ -157,3 +157,39 @@ When the custom life bar is active (default), reaching 0 HP is **sticky**: the b
 stays empty and the dead effect plays for the rest of the run. The life value is
 recorded every frame into the replay life stream (at the internal `×10` scale), so
 a server reading the stream must divide by 10.
+
+---
+
+## Hide Skills
+
+Four skill types temporarily hide a HUD element. They are authored as `Skill`
+events (see the [extended level data format](level_data_extended.md#skill)) and
+activate silently — they emit no skill bar sprite and no skill alarm sound.
+
+| Skill                   | Hides                          |
+| ----------------------- | ------------------------------ |
+| Hides Combo             | Combo count + label            |
+| Hides Primary Metric    | Score bar                      |
+| Hides Secondary Metric  | Life bar                       |
+| Hides Judgment          | Judgment text + accuracy warning |
+
+### Behavior
+
+* The element is hidden for the skill's `duration` (default 6s), starting at the
+  skill's beat.
+* The transition is a **0.2s fade**: the element fades out over the first 0.2s of
+  the window and fades back in over the last 0.2s, so it never pops.
+* Overlapping hide skills of the same type stack — the element stays hidden (most
+  hidden wins) until the last one ends.
+* Hide skills have **no effect on score or life**.
+
+### Custom UI only
+
+Hide skills act on the engine's **custom** UI. A native Sonolus UI element's
+visibility is fixed for the whole level (it can only be configured at preprocess),
+so it cannot be faded at runtime. In practice:
+
+* With the matching `Custom ...` option **on** (the default for combo, score bar,
+  life bar, and judgment), the custom element is shown and the hide skill fades it.
+* With the option **off**, the native element is shown instead and the hide skill
+  has nothing it can hide — the native element stays visible.

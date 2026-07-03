@@ -6,7 +6,7 @@ from sonolus.script.interval import clamp
 from sonolus.script.runtime import offset_adjusted_time, time, touches
 
 from sekai.lib import archetype_names
-from sekai.lib.custom_elements import LifeManager, ScoreIndicator
+from sekai.lib.custom_elements import LifeManager, ScoreIndicator, reset_skill_hide
 from sekai.lib.events import reset_fever_bounds
 from sekai.lib.initialization import LastNote
 from sekai.lib.layout import (
@@ -45,6 +45,7 @@ class StaticStage(PlayArchetype):
     def update_sequential(self):
         refresh_layout()
         reset_fever_bounds()
+        reset_skill_hide()
 
     @callback(order=3)
     def touch(self):

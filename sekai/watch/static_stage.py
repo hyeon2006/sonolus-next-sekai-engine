@@ -2,7 +2,7 @@ from sonolus.script.archetype import WatchArchetype, callback, entity_memory
 from sonolus.script.runtime import is_skip, time
 
 from sekai.lib import archetype_names
-from sekai.lib.custom_elements import LifeManager, ScoreIndicator
+from sekai.lib.custom_elements import LifeManager, ScoreIndicator, reset_skill_hide
 from sekai.lib.events import reset_fever_bounds
 from sekai.lib.initialization import LastNote
 from sekai.lib.layout import (
@@ -30,6 +30,7 @@ class WatchStaticStage(WatchArchetype):
     def update_sequential(self):
         refresh_layout()
         reset_fever_bounds()
+        reset_skill_hide()
 
     def update_parallel(self):
         draw_stage_and_accessories(

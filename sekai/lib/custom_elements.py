@@ -26,7 +26,7 @@ from sekai.lib.layout import (
     transform_static_quad,
 )
 from sekai.lib.level_config import LevelConfig
-from sekai.lib.options import Options, Version
+from sekai.lib.options import Options, SkillMode, Version
 from sekai.lib.skin import (
     ActiveSkin,
 )
@@ -70,6 +70,49 @@ class LifeManager:
     scale: int
 
 
+# Seconds over which a hide skill fades its target element out (on activation) and back in (as it
+# ends). Native Sonolus UI can only be configured at preprocess, so hide skills act on the engine's
+# custom UI only.
+SKILL_HIDE_FADE = 0.2
+
+
+@level_memory
+class SkillHide:
+    # Per-frame "hidden amount" for each hideable custom UI element (0 = fully shown, 1 = hidden).
+    # Defaults to 0 so the UI shows when no hide skill runs (incl. modes that never reset it); reset
+    # to 0 each frame in play/watch, then raised by any active hide skill.
+    combo_hidden: float
+    primary_hidden: float
+    secondary_hidden: float
+    judgment_hidden: float
+
+
+def reset_skill_hide():
+    """Mark every hideable element fully shown (called each frame before skills run)."""
+    SkillHide.combo_hidden = 0.0
+    SkillHide.primary_hidden = 0.0
+    SkillHide.secondary_hidden = 0.0
+    SkillHide.judgment_hidden = 0.0
+
+
+def apply_skill_hide(effect: SkillMode, start_time: float, end_time: float, t: float):
+    """Raise the target element's hidden amount for an active hide skill.
+
+    Fades over SKILL_HIDE_FADE at each end of the window (0->1 just after start_time, 1->0 just
+    before end_time).
+    """
+    hidden = clamp(min((t - start_time) / SKILL_HIDE_FADE, (end_time - t) / SKILL_HIDE_FADE), 0.0, 1.0)
+    match effect:
+        case SkillMode.HIDE_COMBO:
+            SkillHide.combo_hidden = max(SkillHide.combo_hidden, hidden)
+        case SkillMode.HIDE_PRIMARY_METRIC:
+            SkillHide.primary_hidden = max(SkillHide.primary_hidden, hidden)
+        case SkillMode.HIDE_SECONDARY_METRIC:
+            SkillHide.secondary_hidden = max(SkillHide.secondary_hidden, hidden)
+        case SkillMode.HIDE_JUDGMENT:
+            SkillHide.judgment_hidden = max(SkillHide.judgment_hidden, hidden)
+
+
 class NeumaierSum(Record):
     base: float
     c: float
@@ -111,6 +154,9 @@ class ScoreIndicator:
 def draw_combo_label(ap: bool, combo: int):
     if Options.hide_ui >= 2:
         return
+    hide_a = 1.0 - SkillHide.combo_hidden
+    if hide_a <= 0:
+        return
     if not ActiveSkin.combo_label.available:
         return
     if is_watch() and Options.auto_judgment and not is_replay():
@@ -122,21 +168,25 @@ def draw_combo_label(ap: bool, combo: int):
 
     ui = runtime_ui()
 
-    a = ui.combo_config.alpha * (sin(time() * AP_EFFECT_SPEED) + 1) * 0.5
+    combo_a = ui.combo_config.alpha * hide_a
+    a = combo_a * (sin(time() * AP_EFFECT_SPEED) + 1) * 0.5
     layout = FixedUiLayout.combo_label
     if ap or not Options.ap_effect:
         ActiveSkin.combo_label.get_sprite(ComboType.NORMAL).draw(
-            quad=layout, z=get_z_alt(LAYER_JUDGMENT, 1).tuple, a=ui.combo_config.alpha
+            quad=layout, z=get_z_alt(LAYER_JUDGMENT, 1).tuple, a=combo_a
         )
     else:
         ActiveSkin.combo_label.get_sprite(ComboType.AP).draw(
-            quad=layout, z=get_z_alt(LAYER_JUDGMENT, 1).tuple, a=ui.combo_config.alpha
+            quad=layout, z=get_z_alt(LAYER_JUDGMENT, 1).tuple, a=combo_a
         )
         ActiveSkin.combo_label.get_sprite(ComboType.GLOW).draw(quad=layout, z=get_z_alt(LAYER_JUDGMENT).tuple, a=a)
 
 
 def draw_combo_number(draw_time: float, ap: bool, combo: int):
     if Options.hide_ui >= 2:
+        return
+    hide_a = 1.0 - SkillHide.combo_hidden
+    if hide_a <= 0:
         return
     if not ActiveSkin.combo_number.available:
         return
@@ -170,13 +220,13 @@ def draw_combo_number(draw_time: float, ap: bool, combo: int):
     s2_start = base_h / base_h2
     s2 = s2_start + (1 - s2_start) * unlerp_clamped(draw_time + 0.112, draw_time + 0.192, time())
 
-    a = ui.combo_config.alpha
+    a = ui.combo_config.alpha * hide_a
     a2 = (
-        ui.combo_config.alpha * unlerp(draw_time + 0.192, draw_time + 0.112, time())
+        ui.combo_config.alpha * hide_a * unlerp(draw_time + 0.192, draw_time + 0.112, time())
         if time() >= draw_time + 0.112
         else 0
     )
-    a3 = ui.combo_config.alpha * (sin(time() * AP_EFFECT_SPEED) + 1) * 0.5
+    a3 = ui.combo_config.alpha * hide_a * (sin(time() * AP_EFFECT_SPEED) + 1) * 0.5
 
     h, w = transform_fixed_size(base_h, base_w)
     h2, w2 = transform_fixed_size(base_h2, base_w2)
@@ -478,6 +528,9 @@ class ComboNumberLayout(Record):
 def draw_judgment_text(draw_time: float, judgment: Judgment, windows: SekaiWindow, accuracy: float):
     if Options.hide_ui >= 2:
         return
+    hide_a = 1.0 - SkillHide.judgment_hidden
+    if hide_a <= 0:
+        return
     if not ActiveSkin.judgment.available:
         return
     if not Options.custom_judgment:
@@ -492,7 +545,7 @@ def draw_judgment_text(draw_time: float, judgment: Judgment, windows: SekaiWindo
     base_h = 0.09 * ui.combo_config.scale
     base_w = base_h * (310 / 80) * 7.183
     h, w = transform_fixed_size(base_h, base_w)
-    a = ui.judgment_config.alpha * unlerp_clamped(draw_time, draw_time + 0.064, time())
+    a = ui.judgment_config.alpha * hide_a * unlerp_clamped(draw_time, draw_time + 0.064, time())
     s = unlerp_clamped(draw_time, draw_time + 0.064, time())
     layout = layout_combo_label(screen_center, w=w * s / 2, h=h * s / 2)
     ActiveSkin.judgment.get_sprite(judgment_type=judgment, windows=windows, accuracy=accuracy).draw(
@@ -502,6 +555,9 @@ def draw_judgment_text(draw_time: float, judgment: Judgment, windows: SekaiWindo
 
 def draw_judgment_accuracy(judgment: Judgment, accuracy: float, windows: SekaiWindow, wrong_way: bool):
     if Options.hide_ui >= 2:
+        return
+    hide_a = 1.0 - SkillHide.judgment_hidden
+    if hide_a <= 0:
         return
     if not ActiveSkin.accuracy_warning.available:
         return
@@ -514,7 +570,7 @@ def draw_judgment_accuracy(judgment: Judgment, accuracy: float, windows: SekaiWi
 
     ui = runtime_ui()
 
-    a = ui.judgment_config.alpha
+    a = ui.judgment_config.alpha * hide_a
     layout = FixedUiLayout.judgment_accuracy
     ActiveSkin.accuracy_warning.get_sprite(
         judgment=judgment,

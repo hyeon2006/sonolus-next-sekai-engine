@@ -16,7 +16,7 @@ from sonolus.script.runtime import is_replay, is_skip, time
 from sonolus.script.timing import beat_to_time
 
 from sekai.lib import archetype_names
-from sekai.lib.custom_elements import LifeManager
+from sekai.lib.custom_elements import LifeManager, apply_skill_hide
 from sekai.lib.effect import Effects
 from sekai.lib.events import (
     Fever,
@@ -62,7 +62,13 @@ class Skill(WatchArchetype):
         self.start_time = beat_to_time(self.beat)
         self.end_time_3 = self.start_time + 3
         self.end_time_effect = self.start_time + self.duration
-        if Options.hide_ui != 3 and Options.skill_effect and ActiveSkin.skill_bar_score.is_available:
+        if (
+            Options.hide_ui != 3
+            and Options.skill_effect
+            and ActiveSkin.skill_bar_score.is_available
+            and self.effect < SkillMode.HIDE_COMBO
+        ):
+            # Hide skills emit no skill alarm sound.
             Effects.skill.schedule(self.start_time)
         # Native heal scheduling happens in initialization.count_skill, after LifeManager's life
         # scale is known (this preprocess runs before WatchInitialization's).
@@ -79,7 +85,8 @@ class Skill(WatchArchetype):
     def update_parallel(self):
         current_time = time()
         elapsed = current_time - self.start_time
-        if 0 <= elapsed < 3:
+        # Hide skills draw no skill bar.
+        if 0 <= elapsed < 3 and self.effect < SkillMode.HIDE_COMBO:
             draw_skill_bar(elapsed, self.count, self.effect, self.level, self.value, self.scale, self.duration)
         if 0 <= elapsed < self.duration and self.effect == SkillMode.JUDGMENT and not LevelConfig.dynamic_stages:
             draw_judgment_effect(elapsed, duration=self.duration)
@@ -100,6 +107,8 @@ class Skill(WatchArchetype):
             SkillActive.duration = self.duration
         else:
             SkillActive.judgment = False
+        if self.start_time <= t < self.end_time_effect and self.effect >= SkillMode.HIDE_COMBO:
+            apply_skill_hide(self.effect, self.start_time, self.end_time_effect, t)
 
     @property
     def calc_time(self) -> float:
