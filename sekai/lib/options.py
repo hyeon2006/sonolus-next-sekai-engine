@@ -496,7 +496,7 @@ class Options:
         ],
         standard=True,
         advanced=True,
-        default=1,
+        default=2,
     )
     edge_touch_correction: bool = toggle_option(
         name="Edge Touch Correction",
