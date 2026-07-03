@@ -57,7 +57,7 @@ class Skill(PlayArchetype):
 
     @callback(order=-2)
     def preprocess(self):
-        self.effect = SkillMode.from_options(Options.skill_mode, self.effect)
+        self.effect = SkillMode.from_options(SkillMode.LEVEL_DEFAULT, self.effect)
         self.start_time = beat_to_time(self.beat)
         self.end_time_3 = self.start_time + 3
         self.end_time_effect = self.start_time + self.duration

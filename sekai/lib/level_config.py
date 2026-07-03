@@ -2,7 +2,7 @@ from enum import IntEnum
 
 from sonolus.script.globals import level_data
 
-from sekai.lib.options import Options, ScoreMode, Version
+from sekai.lib.options import ScoreMode, Version
 
 
 class EngineRevision(IntEnum):
@@ -33,9 +33,9 @@ def init_level_config(
 ):
     LevelConfig.revision = revision
     if revision >= EngineRevision.SONOLUS_1_1_0:
-        LevelConfig.score_mode = Options.score_mode
+        LevelConfig.score_mode = ScoreMode.UNWEIGHTED_FLAT
     else:
-        LevelConfig.score_mode = ScoreMode.WEIGHTED_COMBO
+        LevelConfig.score_mode = ScoreMode.UNWEIGHTED_FLAT
 
 
 def init_ui_version(ui_version: Version):

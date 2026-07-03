@@ -489,33 +489,6 @@ class Options:
         scope="Rush",
         default=False,
     )
-    skill_mode: SkillMode = select_option(
-        name="Skill Mode",
-        category=gameplay,
-        scope="Rush",
-        values=[
-            "level_default",
-            "score_up",
-            "life_up",
-            "accuracy_up",
-        ],
-        standard=True,
-        default=SkillMode.LEVEL_DEFAULT,
-    )
-    score_mode: ScoreMode = select_option(
-        name="Score Mode",
-        category=gameplay,
-        scope="Sekai",
-        values=[
-            "weighted_flat",
-            "weighted_combo",
-            "unweighted_flat",
-            "unweighted_combo",
-        ],
-        standard=True,
-        advanced=True,
-        default=2,
-    )
     edge_touch_correction: bool = toggle_option(
         name="Edge Touch Correction",
         category=gameplay,
