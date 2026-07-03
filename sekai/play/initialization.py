@@ -1,6 +1,6 @@
 from sonolus.script.archetype import EntityRef, PlayArchetype, callback, entity_info_at, exported, imported
 from sonolus.script.containers import sort_linked_entities
-from sonolus.script.runtime import level_score
+from sonolus.script.runtime import add_life_scheduled, level_score
 
 from sekai.lib import archetype_names
 from sekai.lib.baseevent import init_event_list
@@ -26,7 +26,10 @@ from sekai.lib.layout import (
     layout_static_ui,
 )
 from sekai.lib.level_config import (
+    GAUGE_LIFE_UNIT,
+    GAUGE_MAX_LIFE,
     EngineRevision,
+    LevelConfig,
     init_level_config,
     init_particle_version,
     init_ui_version,
@@ -48,7 +51,7 @@ from sekai.play.static_stage import StaticStage
 class Initialization(PlayArchetype):
     name = archetype_names.INITIALIZATION
 
-    revision: EngineRevision = imported(name="revision", default=EngineRevision.SONOLUS_1_1_0)
+    revision: EngineRevision = imported(name="revision", default=EngineRevision.LATEST)
     initial_life: int = imported(name="initialLife", default=1000)
     first_camera_ref: EntityRef[CameraChange] = imported(name="firstCamera")
 
@@ -71,17 +74,23 @@ class Initialization(PlayArchetype):
         init_buckets()
         init_particle_version(ActiveParticles.ui_checker.check)
         init_score(note.NOTE_ARCHETYPES)
-        init_life(note.NOTE_ARCHETYPES, self.initial_life)
         init_play_common()
         init_connector_sfx_times()
         init_event_list(self.first_camera_ref)
 
-        custom_elements.LifeManager.life = self.initial_life
-        custom_elements.LifeManager.initial_life = self.initial_life
-        custom_elements.LifeManager.max_life = max(2000, self.initial_life * 2)
+        if LevelConfig.revision >= EngineRevision.GAUGE_REWORK:
+            custom_elements.LifeManager.scale = GAUGE_LIFE_UNIT
+            custom_elements.LifeManager.initial_life = min(self.initial_life, 1000) * GAUGE_LIFE_UNIT
+            custom_elements.LifeManager.max_life = GAUGE_MAX_LIFE
+        else:
+            custom_elements.LifeManager.scale = 1
+            custom_elements.LifeManager.initial_life = self.initial_life
+            custom_elements.LifeManager.max_life = max(2000, self.initial_life * 2)
+        custom_elements.LifeManager.life = custom_elements.LifeManager.initial_life
 
         entity_count = count_entities()
-        sorted_linked_list(entity_count)
+        total_combo = sorted_linked_list(entity_count)
+        init_life(note.NOTE_ARCHETYPES, self.initial_life, total_combo)
         if Options.auto_sfx:
             schedule_auto_connector_sfx(entity_count)
 
@@ -101,7 +110,7 @@ class Initialization(PlayArchetype):
         self.despawn = True
 
 
-def sorted_linked_list(entity_count: int):
+def sorted_linked_list(entity_count: int) -> int:
     note_head, note_length, skill_head, skill_length = initial_list(entity_count)
 
     sorted_skill_head = +EntityRef[Skill]
@@ -117,6 +126,8 @@ def sorted_linked_list(entity_count: int):
         custom_elements.ScoreIndicator.max_score = 1000000
         custom_elements.ScoreIndicator.score = 1000000
         custom_elements.ScoreIndicator.percentage = 100
+
+    return note_length
 
 
 def initial_list(entity_count):
@@ -334,4 +345,6 @@ def count_skill(head: int) -> None:
     while ptr > 0:
         Skill.at(ptr).count = count
         count += 1
+        if Skill.at(ptr).effect == SkillMode.HEAL:
+            add_life_scheduled(Skill.at(ptr).value * custom_elements.LifeManager.scale, Skill.at(ptr).start_time)
         ptr = Skill.at(ptr).next_ref.index

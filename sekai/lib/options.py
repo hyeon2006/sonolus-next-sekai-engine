@@ -13,6 +13,12 @@ class ScoreMode(IntEnum):
     UNWEIGHTED_COMBO = 3
 
 
+class GaugeMode(IntEnum):
+    STANDARD = 0
+    HEAVY = 1
+    ULTIMA = 2
+
+
 class StageCoverMode(IntEnum):
     STAGE = 0
     STAGE_AND_LINE = 1
@@ -77,6 +83,18 @@ class Options:
         max=2,
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
+    )
+    gauge: GaugeMode = select_option(
+        name="Gauge",
+        description="Life gauge type. Heavy and Ultima gauges are harder to pass.",
+        standard=True,
+        scope="Rush",
+        default=GaugeMode.STANDARD,
+        values=[
+            "Standard",
+            "Heavy",
+            "Ultima",
+        ],
     )
     note_speed: float = slider_option(
         name=StandardText.NOTE_SPEED,

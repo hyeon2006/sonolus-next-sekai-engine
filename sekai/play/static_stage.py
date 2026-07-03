@@ -100,7 +100,7 @@ class StaticStage(PlayArchetype):
             StaticStageData.background_cover,
             StaticStageData.dead_effect_quads,
             StaticStageData.ui_layout,
-            LifeManager.life,
+            LifeManager.life / LifeManager.scale,
             LastNote.last_time,
             self.dead_time,
             StaticStageData.layout_stage,
