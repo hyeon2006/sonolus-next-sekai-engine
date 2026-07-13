@@ -72,6 +72,7 @@ class WatchInitialization(WatchArchetype):
 
     @callback(order=-1)
     def preprocess(self):
+        self.revision = EngineRevision.LATEST
         if is_replay():
             self.revision = self.replay_revision
         init_level_config(self.revision)

@@ -59,6 +59,7 @@ class Initialization(PlayArchetype):
 
     @callback(order=-1)
     def preprocess(self):
+        self.revision = EngineRevision.LATEST
         init_level_config(self.revision)
         init_layout()
         init_skin()
