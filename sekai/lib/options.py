@@ -104,14 +104,13 @@ class Options:
     )
     gauge: GaugeMode = select_option(
         name="Gauge",
-        description="Life gauge type. Heavy and Ultima gauges are harder to pass.",
         standard=True,
         scope="Rush",
         default=GaugeMode.STANDARD,
         values=[
-            "Standard",
-            "Heavy",
-            "Ultima",
+            "standard",
+            "heavy",
+            "ultima",
         ],
     )
     note_speed: float = slider_option(
