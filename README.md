@@ -45,6 +45,7 @@ Shorthand used in the tables:
 | Judgment Line Background | `Sekai Judgment Background <Color>` -> `Sekai Judgment Background`  |
 | Judgment Gradient        | `Sekai Judgment Gradient <Color>`                                   |
 | Judgment Edge            | `Sekai Judgment Edge <Color>`                                       |
+| Judgment Single Line     | `Sekai Judgment Single Line <Color>` -> `Sekai Judgment Edge <Color>` |
 | Judgment Edge Left       | `Sekai Judgment Edge Left <Color>` -> `Sekai Judgment Edge <Color>` |
 | Judgment Center          | `Sekai Judgment Center <Color>`                                     |
 

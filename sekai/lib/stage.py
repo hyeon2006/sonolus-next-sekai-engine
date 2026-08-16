@@ -50,6 +50,7 @@ from sekai.lib.layout import (
     compute_stage_transform,
     current_layout_transform,
     current_stage_tilt,
+    hidden_amount,
     identity_stage_transform,
     layout_full_width_stage_cover,
     layout_hidden_cover,
@@ -62,6 +63,7 @@ from sekai.lib.layout import (
     layout_stage_lane_by_edges,
     perspective_rect,
     stage_aspect_ratio_locked,
+    stage_cover_amount,
     tilt_depth,
     tilt_widened_edge,
     tilt_width_factor,
@@ -972,7 +974,7 @@ def draw_dynamic_stage(
     def draw_single_line(sprites: JudgmentSpriteSet, z: ZIndexes, a: float):
         half_thick = nh / f / 2
         layout = place(perspective_rect(l_jl, r_jl, 1 - half_thick, 1 + half_thick, travel))
-        sprites.judgment_edge.draw(layout, z=z.tuple, a=a)
+        sprites.judgment_single_line.draw(layout, z=z.tuple, a=a)
 
     la = lane_alpha * (1 - fw)
     if la > 0:
@@ -1187,10 +1189,10 @@ def draw_per_stage_cover(
     def place(q: QuadLike) -> QuadLike:
         return transform.transform_quad(q)
 
-    z_cover = get_z_alt(LAYER_COVER)
-    z_line = get_z_alt(LAYER_COVER, 1)
-    z_hidden = get_z_alt(LAYER_COVER, 2)
-    if Options.stage_cover > 0:
+    z_cover = get_z_alt(LAYER_COVER, order * 4)
+    z_line = get_z_alt(LAYER_COVER, order * 4 + 1)
+    z_hidden = get_z_alt(LAYER_COVER, order * 4 + 2)
+    if stage_cover_amount() > 0:
         match Options.stage_cover_mode:
             case StageCoverMode.STAGE:
                 layout = layout_stage_cover(l, r)
@@ -1203,13 +1205,13 @@ def draw_per_stage_cover(
                 pass
             case _:
                 assert_never(Options.stage_cover_mode)
-    if Options.hidden > 0:
+    if hidden_amount() > 0:
         layout = layout_hidden_cover(l, r)
         ActiveSkin.cover.draw(place(layout), z=z_hidden.tuple, a=ca * alpha)
 
 
 def draw_stage_cover(alpha):
-    if Options.stage_cover > 0:
+    if stage_cover_amount() > 0:
         match Options.stage_cover_mode:
             case StageCoverMode.STAGE:
                 if not LevelConfig.dynamic_stages:
@@ -1225,7 +1227,7 @@ def draw_stage_cover(alpha):
                 ActiveSkin.cover.draw(layout, z=get_z(LAYER_COVER).tuple, a=Options.stage_cover_alpha * alpha)
             case _:
                 assert_never(Options.stage_cover_mode)
-    if Options.hidden > 0 and not LevelConfig.dynamic_stages:
+    if hidden_amount() > 0 and not LevelConfig.dynamic_stages:
         layout = layout_hidden_cover()
         ActiveSkin.cover.draw(layout, z=get_z(LAYER_COVER).tuple, a=alpha)
 

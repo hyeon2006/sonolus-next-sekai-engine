@@ -41,48 +41,56 @@ class BaseSkin:
     judgment_background_neutral: Sprite = sprite("Sekai Judgment Background Neutral")
     judgment_gradient_neutral: Sprite = sprite("Sekai Judgment Gradient Neutral")
     judgment_edge_neutral: Sprite = sprite("Sekai Judgment Edge Neutral")
+    judgment_single_line_neutral: Sprite = sprite("Sekai Judgment Single Line Neutral")
     judgment_edge_left_neutral: Sprite = sprite("Sekai Judgment Edge Left Neutral")
     judgment_center_neutral: Sprite = sprite("Sekai Judgment Center Neutral")
 
     judgment_background_red: Sprite = sprite("Sekai Judgment Background Red")
     judgment_gradient_red: Sprite = sprite("Sekai Judgment Gradient Red")
     judgment_edge_red: Sprite = sprite("Sekai Judgment Edge Red")
+    judgment_single_line_red: Sprite = sprite("Sekai Judgment Single Line Red")
     judgment_edge_left_red: Sprite = sprite("Sekai Judgment Edge Left Red")
     judgment_center_red: Sprite = sprite("Sekai Judgment Center Red")
 
     judgment_background_green: Sprite = sprite("Sekai Judgment Background Green")
     judgment_gradient_green: Sprite = sprite("Sekai Judgment Gradient Green")
     judgment_edge_green: Sprite = sprite("Sekai Judgment Edge Green")
+    judgment_single_line_green: Sprite = sprite("Sekai Judgment Single Line Green")
     judgment_edge_left_green: Sprite = sprite("Sekai Judgment Edge Left Green")
     judgment_center_green: Sprite = sprite("Sekai Judgment Center Green")
 
     judgment_background_blue: Sprite = sprite("Sekai Judgment Background Blue")
     judgment_gradient_blue: Sprite = sprite("Sekai Judgment Gradient Blue")
     judgment_edge_blue: Sprite = sprite("Sekai Judgment Edge Blue")
+    judgment_single_line_blue: Sprite = sprite("Sekai Judgment Single Line Blue")
     judgment_edge_left_blue: Sprite = sprite("Sekai Judgment Edge Left Blue")
     judgment_center_blue: Sprite = sprite("Sekai Judgment Center Blue")
 
     judgment_background_yellow: Sprite = sprite("Sekai Judgment Background Yellow")
     judgment_gradient_yellow: Sprite = sprite("Sekai Judgment Gradient Yellow")
     judgment_edge_yellow: Sprite = sprite("Sekai Judgment Edge Yellow")
+    judgment_single_line_yellow: Sprite = sprite("Sekai Judgment Single Line Yellow")
     judgment_edge_left_yellow: Sprite = sprite("Sekai Judgment Edge Left Yellow")
     judgment_center_yellow: Sprite = sprite("Sekai Judgment Center Yellow")
 
     judgment_background_purple: Sprite = sprite("Sekai Judgment Background Purple")
     judgment_gradient_purple: Sprite = sprite("Sekai Judgment Gradient Purple")
     judgment_edge_purple: Sprite = sprite("Sekai Judgment Edge Purple")
+    judgment_single_line_purple: Sprite = sprite("Sekai Judgment Single Line Purple")
     judgment_edge_left_purple: Sprite = sprite("Sekai Judgment Edge Left Purple")
     judgment_center_purple: Sprite = sprite("Sekai Judgment Center Purple")
 
     judgment_background_cyan: Sprite = sprite("Sekai Judgment Background Cyan")
     judgment_gradient_cyan: Sprite = sprite("Sekai Judgment Gradient Cyan")
     judgment_edge_cyan: Sprite = sprite("Sekai Judgment Edge Cyan")
+    judgment_single_line_cyan: Sprite = sprite("Sekai Judgment Single Line Cyan")
     judgment_edge_left_cyan: Sprite = sprite("Sekai Judgment Edge Left Cyan")
     judgment_center_cyan: Sprite = sprite("Sekai Judgment Center Cyan")
 
     judgment_background_black: Sprite = sprite("Sekai Judgment Background Black")
     judgment_gradient_black: Sprite = sprite("Sekai Judgment Gradient Black")
     judgment_edge_black: Sprite = sprite("Sekai Judgment Edge Black")
+    judgment_single_line_black: Sprite = sprite("Sekai Judgment Single Line Black")
     judgment_edge_left_black: Sprite = sprite("Sekai Judgment Edge Left Black")
     judgment_center_black: Sprite = sprite("Sekai Judgment Center Black")
 
@@ -435,6 +443,7 @@ class JudgmentSpriteSet(Record):
     judgment_background: Sprite
     judgment_gradient: Sprite
     judgment_edge: Sprite
+    judgment_single_line: Sprite
     judgment_edge_left: Sprite
     judgment_center: Sprite
 
@@ -1399,6 +1408,10 @@ def init_skin():
         ),
         judgment_gradient=BaseSkin.judgment_gradient_neutral,
         judgment_edge=BaseSkin.judgment_edge_neutral,
+        judgment_single_line=first_available_sprite(
+            BaseSkin.judgment_single_line_neutral,
+            BaseSkin.judgment_edge_neutral,
+        ),
         judgment_edge_left=first_available_sprite(
             BaseSkin.judgment_edge_left_neutral,
             BaseSkin.judgment_edge_neutral,
@@ -1412,6 +1425,10 @@ def init_skin():
         ),
         judgment_gradient=BaseSkin.judgment_gradient_red,
         judgment_edge=BaseSkin.judgment_edge_red,
+        judgment_single_line=first_available_sprite(
+            BaseSkin.judgment_single_line_red,
+            BaseSkin.judgment_edge_red,
+        ),
         judgment_edge_left=first_available_sprite(
             BaseSkin.judgment_edge_left_red,
             BaseSkin.judgment_edge_red,
@@ -1425,6 +1442,10 @@ def init_skin():
         ),
         judgment_gradient=BaseSkin.judgment_gradient_green,
         judgment_edge=BaseSkin.judgment_edge_green,
+        judgment_single_line=first_available_sprite(
+            BaseSkin.judgment_single_line_green,
+            BaseSkin.judgment_edge_green,
+        ),
         judgment_edge_left=first_available_sprite(
             BaseSkin.judgment_edge_left_green,
             BaseSkin.judgment_edge_green,
@@ -1438,6 +1459,10 @@ def init_skin():
         ),
         judgment_gradient=BaseSkin.judgment_gradient_blue,
         judgment_edge=BaseSkin.judgment_edge_blue,
+        judgment_single_line=first_available_sprite(
+            BaseSkin.judgment_single_line_blue,
+            BaseSkin.judgment_edge_blue,
+        ),
         judgment_edge_left=first_available_sprite(
             BaseSkin.judgment_edge_left_blue,
             BaseSkin.judgment_edge_blue,
@@ -1451,6 +1476,10 @@ def init_skin():
         ),
         judgment_gradient=BaseSkin.judgment_gradient_yellow,
         judgment_edge=BaseSkin.judgment_edge_yellow,
+        judgment_single_line=first_available_sprite(
+            BaseSkin.judgment_single_line_yellow,
+            BaseSkin.judgment_edge_yellow,
+        ),
         judgment_edge_left=first_available_sprite(
             BaseSkin.judgment_edge_left_yellow,
             BaseSkin.judgment_edge_yellow,
@@ -1464,6 +1493,10 @@ def init_skin():
         ),
         judgment_gradient=BaseSkin.judgment_gradient_purple,
         judgment_edge=BaseSkin.judgment_edge_purple,
+        judgment_single_line=first_available_sprite(
+            BaseSkin.judgment_single_line_purple,
+            BaseSkin.judgment_edge_purple,
+        ),
         judgment_edge_left=first_available_sprite(
             BaseSkin.judgment_edge_left_purple,
             BaseSkin.judgment_edge_purple,
@@ -1477,6 +1510,10 @@ def init_skin():
         ),
         judgment_gradient=BaseSkin.judgment_gradient_cyan,
         judgment_edge=BaseSkin.judgment_edge_cyan,
+        judgment_single_line=first_available_sprite(
+            BaseSkin.judgment_single_line_cyan,
+            BaseSkin.judgment_edge_cyan,
+        ),
         judgment_edge_left=first_available_sprite(
             BaseSkin.judgment_edge_left_cyan,
             BaseSkin.judgment_edge_cyan,
@@ -1490,6 +1527,10 @@ def init_skin():
         ),
         judgment_gradient=BaseSkin.judgment_gradient_black,
         judgment_edge=BaseSkin.judgment_edge_black,
+        judgment_single_line=first_available_sprite(
+            BaseSkin.judgment_single_line_black,
+            BaseSkin.judgment_edge_black,
+        ),
         judgment_edge_left=first_available_sprite(
             BaseSkin.judgment_edge_left_black,
             BaseSkin.judgment_edge_black,

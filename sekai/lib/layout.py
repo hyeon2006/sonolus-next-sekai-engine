@@ -287,6 +287,18 @@ def stage_aspect_ratio_locked() -> bool:
     return Options.lock_stage_aspect_ratio or LevelConfig.has_stage_transforms
 
 
+def stage_cover_amount() -> float:
+    if LevelConfig.has_stage_transforms:
+        return 0.0
+    return Options.stage_cover
+
+
+def hidden_amount() -> float:
+    if LevelConfig.has_stage_transforms:
+        return 0.0
+    return Options.hidden
+
+
 def init_layout():
     if stage_aspect_ratio_locked():
         if aspect_ratio() > TARGET_ASPECT_RATIO:
@@ -327,17 +339,19 @@ def init_layout():
     # Fixed approach-curve depths for the cover/spawn and far cutoff boundaries. These are
     # tilt-independent (they pin screen positions); refresh_layout() converts them to the
     # equivalent progress bounds under the current tilt each frame.
-    if Options.stage_cover:
-        Layout.cover_depth = lerp(APPROACH_SCALE, 1.0, Options.stage_cover)
+    cover = stage_cover_amount()
+    hidden = hidden_amount()
+    if cover:
+        Layout.cover_depth = lerp(APPROACH_SCALE, 1.0, cover)
     else:
         Layout.cover_depth = APPROACH_SCALE
-    if Options.hidden:
-        Layout.cutoff_depth = lerp(1.0, APPROACH_SCALE, Options.hidden)
+    if hidden:
+        Layout.cutoff_depth = lerp(1.0, APPROACH_SCALE, hidden)
     else:
         Layout.cutoff_depth = DEFAULT_APPROACH_CUTOFF
 
-    if Options.stage_cover and Options.stage_cover_scroll_speed_compensation != StageCoverNoteSpeedCompensation.OFF:
-        target_travel = lerp(APPROACH_SCALE, 1.0, Options.stage_cover)
+    if cover and Options.stage_cover_scroll_speed_compensation != StageCoverNoteSpeedCompensation.OFF:
+        target_travel = lerp(APPROACH_SCALE, 1.0, cover)
         candidate = inverse_approach_untilted(target_travel)
         Layout.approach_start = clamp(candidate, 0, 0.99)
 
@@ -623,7 +637,7 @@ def refresh_layout():
 
     DynamicLayout.scaled_note_h = DynamicLayout.note_h * DynamicLayout.h_scale
 
-    if Options.stage_cover:
+    if stage_cover_amount():
         DynamicLayout.progress_start = inverse_approach_tilt(Layout.cover_depth)
     else:
         DynamicLayout.progress_start = inverse_approach_tilt(Layout.cover_depth - vanish_ext)
@@ -1020,7 +1034,7 @@ def layout_lane_by_edges_fever(l: float, r: float, y_offset: float = 0.0) -> Qua
 
 
 def layout_stage_cover(l: float = -6, r: float = 6) -> Quad:
-    b = lerp(APPROACH_SCALE, 1.0, Options.stage_cover)
+    b = lerp(APPROACH_SCALE, 1.0, stage_cover_amount())
     return perspective_rect(
         l=l,
         r=r,
@@ -1030,7 +1044,7 @@ def layout_stage_cover(l: float = -6, r: float = 6) -> Quad:
 
 
 def layout_stage_cover_and_line(l: float = -6, r: float = 6) -> tuple[Quad, Quad]:
-    b = lerp(APPROACH_SCALE, 1.0, Options.stage_cover)
+    b = lerp(APPROACH_SCALE, 1.0, stage_cover_amount())
     cover_b = b + 0.002
     return perspective_rect(
         l=l,
@@ -1046,7 +1060,7 @@ def layout_stage_cover_and_line(l: float = -6, r: float = 6) -> tuple[Quad, Quad
 
 
 def layout_full_width_stage_cover() -> Quad:
-    pre_b = lerp(APPROACH_SCALE, 1.0, Options.stage_cover) * DynamicLayout.h_scale + DynamicLayout.t
+    pre_b = lerp(APPROACH_SCALE, 1.0, stage_cover_amount()) * DynamicLayout.h_scale + DynamicLayout.t
     big = 20.0
     rot = -DynamicLayout.rotate
     return Quad(
@@ -1059,7 +1073,7 @@ def layout_full_width_stage_cover() -> Quad:
 
 def layout_hidden_cover(l: float = -6, r: float = 6) -> Quad:
     b = 1 - DynamicLayout.note_h
-    t = min(b, max(lerp(1.0, APPROACH_SCALE, Options.hidden), lerp(APPROACH_SCALE, 1.0, Options.stage_cover)))
+    t = min(b, max(lerp(1.0, APPROACH_SCALE, hidden_amount()), lerp(APPROACH_SCALE, 1.0, stage_cover_amount())))
     return perspective_rect(
         l=l,
         r=r,
@@ -2043,7 +2057,7 @@ def compute_hitbox(
         Options.stage_cover_scroll_speed_compensation != StageCoverNoteSpeedCompensation.OFF
         and LevelConfig.dynamic_stages
     ):
-        cover_travel = lerp(APPROACH_SCALE, 1.0, Options.stage_cover)
+        cover_travel = lerp(APPROACH_SCALE, 1.0, stage_cover_amount())
         vertical_half_lanes *= clamp((1 - cover_travel) / (1 - APPROACH_SCALE), 0, 1)
     vertical_extent = vertical_half_lanes * vertical_lane_w
     rot = -transform.rotate
