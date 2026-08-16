@@ -732,12 +732,11 @@ def draw_connector_default(
 
 
 def get_cross_fate_opacities(a, t, period):
-    phase = (t % period) / period
-    opacity2_base = 1 - abs(1 - 2 * phase)
-    opacity1_base = 1 - opacity2_base
-    correction = 0.6
-    opacity1 = a * (opacity1_base + correction * opacity1_base * opacity2_base)
-    opacity2 = a * (opacity2_base + correction * opacity1_base * opacity2_base)
+    phase = (t % period) / period * 2 * pi
+    rate = 0.5 - cos(phase) * 0.5
+
+    opacity1 = a * (1 - rate)
+    opacity2 = a * rate
 
     return opacity1, opacity2
 
