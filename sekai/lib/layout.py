@@ -982,7 +982,7 @@ def screen_bound_pre_rotation_y(rotate: float, target_y: float) -> float:
 
 
 def get_note_spawn_depth() -> float:
-    if Options.stage_cover:
+    if stage_cover_amount():
         return Layout.cover_depth
     vanish_ext = LANE_T - DynamicLayout.lane_t
     return Layout.cover_depth - vanish_ext
