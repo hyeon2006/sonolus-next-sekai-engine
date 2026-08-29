@@ -197,3 +197,7 @@ description.ko = "21:9, 16:9, 4:3 화면의 기준 상자를 표시합니다."
 description.fr = "Affiche des repères pour les écrans 21:9, 16:9 et 4:3."
 description.ru = "Рисует референсные 'коробки' для экранов на 21:9, 16:9 и 4:3."
 description.vi = "Hiển thị khung tham chiếu cho các tỷ lệ màn hình 21:9, 16:9 và 4:3."
+
+[options.allow_debug_options_in_play_mode]
+title.en = "Allow Debug Options in Play Mode"
+description.en = "Allows Show Hitboxes and Test Aspect Ratio to take effect in play mode."

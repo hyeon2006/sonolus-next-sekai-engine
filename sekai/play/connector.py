@@ -289,7 +289,7 @@ class Connector(PlayArchetype):
             )
 
     def draw_hitbox(self):
-        if not Options.show_hitboxes:
+        if not Options.allow_debug_options_in_play_mode or not Options.show_hitboxes:
             return
         if self.active_head_ref.index <= 0 or not should_show_connector_hitbox(self.kind):
             return

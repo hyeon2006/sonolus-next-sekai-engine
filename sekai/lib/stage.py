@@ -41,6 +41,7 @@ from sekai.lib.layout import (
     perspective_rect,
     stage_aspect_ratio_locked,
     stage_cover_amount,
+    test_aspect_active,
     tilt_depth,
     tilt_widened_edge,
     tilt_width_factor,
@@ -618,7 +619,7 @@ def draw_aspect_box(sprite: Sprite, ratio: float, sub: int):
 
 
 def draw_test_aspect_overlay():
-    if not Options.test_aspect_ratio:
+    if not test_aspect_active():
         return
     # Higher sub = drawn on top; 16:9 (the field reference) is drawn last so it sits topmost.
     draw_aspect_box(ActiveSkin.guide_red, 21 / 9, 0)

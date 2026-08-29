@@ -403,7 +403,7 @@ class BaseNote(PlayArchetype):
             )
 
     def draw_hitbox(self):
-        if not Options.show_hitboxes or not self.is_scored:
+        if not Options.allow_debug_options_in_play_mode or not Options.show_hitboxes or not self.is_scored:
             return
         draw_start = hitbox_draw_start(self.kind, self.unadjusted_input_interval.start, self.target_time)
         if draw_start <= offset_adjusted_time() <= self.unadjusted_input_interval.end:
