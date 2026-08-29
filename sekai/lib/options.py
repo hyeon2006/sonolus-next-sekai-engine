@@ -317,6 +317,12 @@ class Options:
         advanced=True,
         default=1,
     )
+    edge_touch_correction: bool = toggle_option(
+        name="Edge Touch Correction",
+        category=gameplay,
+        scope="Next Sekai",
+        default=True,
+    )
     show_hitboxes: bool = toggle_option(
         name="Show Hitboxes",
         category=miscellaneous,

@@ -3,7 +3,7 @@ from sonolus.script.array import Dim
 from sonolus.script.containers import VarArray
 from sonolus.script.globals import level_memory
 from sonolus.script.interval import clamp
-from sonolus.script.runtime import offset_adjusted_time, time, touches
+from sonolus.script.runtime import offset_adjusted_time, time
 
 from sekai.lib import archetype_names
 from sekai.lib.layout import IDENTITY_AFFINE_TRANSFORM, layout_lane_area, refresh_layout, touch_to_lane
@@ -42,7 +42,7 @@ class StaticStage(PlayArchetype):
             return
         empty_lanes.clear()
         total_hitbox = layout_lane_area(-7, 7)
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not total_hitbox.contains_point(touch.position):
                 continue
             if not input_manager.is_allowed_empty(touch):

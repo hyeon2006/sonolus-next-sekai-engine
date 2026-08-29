@@ -179,6 +179,10 @@ unweighted_combo.fr = "Non Pondéré · Combo"
 unweighted_combo.ru = "Невзвешенное комбо"
 unweighted_combo.vi = "Không trọng số + Thưởng Combo"
 
+[options.edge_touch_correction]
+title.en = "Edge Touch Correction"
+description.en = "Adjusts touches outside the 16:9 play area on low aspect ratio devices to the nearest edge to avoid misses."
+
 [options.show_hitboxes]
 title.en = "Show Hitboxes"
 title.ko = "판정 범위 표시"

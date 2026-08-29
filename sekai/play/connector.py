@@ -6,7 +6,7 @@ from sonolus.script.archetype import EntityRef, PlayArchetype, callback, entity_
 from sonolus.script.effect import LoopedEffectHandle
 from sonolus.script.interval import Interval, lerp
 from sonolus.script.particle import ParticleHandle
-from sonolus.script.runtime import input_offset, offset_adjusted_time, time, touches
+from sonolus.script.runtime import input_offset, offset_adjusted_time, time
 from sonolus.script.timing import beat_to_time
 
 from sekai.debug import DISABLE_NOTES
@@ -157,7 +157,7 @@ class Connector(PlayArchetype):
                     get_connector_input_leniency(self.kind),
                 )
                 bounds = self.active_connector_info.input_bounds
-                for touch in touches():
+                for touch in input_manager.processed_touches():
                     if not touch.ended and bounds.contains_point(touch.position):
                         input_manager.disallow_empty(touch)
                         if not self.active_connector_info.is_active:

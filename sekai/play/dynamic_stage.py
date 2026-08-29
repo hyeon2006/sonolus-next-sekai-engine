@@ -12,7 +12,7 @@ from sonolus.script.archetype import (
     shared_memory,
 )
 from sonolus.script.interval import clamp
-from sonolus.script.runtime import time, touches
+from sonolus.script.runtime import time
 from sonolus.script.timing import beat_to_bpm, beat_to_time
 
 from sekai.lib import archetype_names
@@ -184,7 +184,7 @@ class DynamicStage(PlayArchetype):
         transform_mat = transform.transform()
         total_hitbox = transform_mat.transform_quad(layout_lane_area(leftmost - 0.5, rightmost + 0.5))
         empty_lanes = StageMemory.empty_lanes
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not total_hitbox.contains_point(touch.position):
                 continue
             if not input_manager.is_allowed_empty(touch):

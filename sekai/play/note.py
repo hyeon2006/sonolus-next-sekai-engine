@@ -20,7 +20,7 @@ from sonolus.script.containers import VarArray
 from sonolus.script.globals import level_memory
 from sonolus.script.interval import Interval, lerp
 from sonolus.script.quad import Quad
-from sonolus.script.runtime import Touch, delta_time, input_offset, offset_adjusted_time, time, touches
+from sonolus.script.runtime import Touch, delta_time, input_offset, offset_adjusted_time, time
 from sonolus.script.timing import beat_to_time
 
 from sekai.debug import DISABLE_NOTES
@@ -438,7 +438,7 @@ class BaseNote(PlayArchetype):
             if offset_adjusted_time() < self.target_time + self.judgment_window.perfect.end:
                 return False
             # Otherwise, see if there's any ongoing touches in the hitbox.
-            for touch in touches():
+            for touch in input_manager.processed_touches():
                 if not touch.ended and self.hitbox.bounds.contains_point(touch.position):
                     return False
             # If we're past the perfect window, and there are no ongoing touches in the hitbox, we can trigger to
@@ -473,7 +473,7 @@ class BaseNote(PlayArchetype):
             return
         if self.captured_touch_id == 0:
             return
-        touch = next(tap for tap in touches() if tap.id == self.captured_touch_id)
+        touch = next(tap for tap in input_manager.processed_touches() if tap.id == self.captured_touch_id)
         self.judge(touch.start_time)
 
     def handle_release_input(self):
@@ -481,7 +481,7 @@ class BaseNote(PlayArchetype):
             return
         if self.captured_touch_id == 0:
             return
-        touch = next(tap for tap in touches() if tap.id == self.captured_touch_id)
+        touch = next(tap for tap in input_manager.processed_touches() if tap.id == self.captured_touch_id)
         self.judge(touch.time)
 
     def handle_flick_input(self):
@@ -493,7 +493,7 @@ class BaseNote(PlayArchetype):
         # Another touch is allowed to flick the note as long as it started after the start of the input interval,
         # so we don't care which touch matched the tap id, just that the tap id is set.
 
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.check_touch_touch_is_eligible_for_flick(touch):
                 continue
             if not self.check_direction_matches(touch.angle):
@@ -501,7 +501,7 @@ class BaseNote(PlayArchetype):
             input_manager.disallow_empty(touch)
             self.judge(touch.time)
             return
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.check_touch_touch_is_eligible_for_flick(touch):
                 continue
             input_manager.disallow_empty(touch)
@@ -514,7 +514,7 @@ class BaseNote(PlayArchetype):
         if self.should_do_delayed_trigger():
             return
         has_touch = False
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.check_touch_is_eligible_for_trace(touch):
                 continue
             input_manager.disallow_empty(touch)
@@ -538,7 +538,7 @@ class BaseNote(PlayArchetype):
             return
         has_touch = False
         has_correct_direction_touch = False
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.check_touch_is_eligible_for_trace(touch):
                 continue
             input_manager.disallow_empty(touch)
@@ -572,7 +572,7 @@ class BaseNote(PlayArchetype):
 
     def handle_tick_input(self):
         has_touch = False
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.hitbox.bounds.contains_point(touch.position):
                 continue
             input_manager.disallow_empty(touch)
@@ -587,7 +587,7 @@ class BaseNote(PlayArchetype):
 
     def handle_damage_input(self):
         has_touch = False
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.hitbox.bounds.contains_point(touch.position):
                 continue
             input_manager.disallow_empty(touch)
@@ -601,7 +601,7 @@ class BaseNote(PlayArchetype):
         if time() > self.input_interval.end:
             return
         has_touch = False
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.hitbox.bounds.contains_point(touch.position):
                 continue
             input_manager.disallow_empty(touch)
