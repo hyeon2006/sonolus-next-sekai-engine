@@ -4,6 +4,7 @@ import {
     LevelData,
     LevelDataEntity,
 } from '@sonolus/core'
+
 import { USC, USCTimeScaleChange } from './index.js'
 
 export const uscToLevelData = (usc: USC, offset = 0): LevelData => {

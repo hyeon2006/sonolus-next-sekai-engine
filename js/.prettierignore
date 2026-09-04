@@ -1,8 +1,0 @@
-**/*.*
-
-!eslint.config.js
-!README.md
-
-!build.js
-!version.js
-!src/**/*.*
