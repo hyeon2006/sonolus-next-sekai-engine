@@ -88,7 +88,7 @@ export class BinaryReader {
                 return endian === 'le' ? this.readFloat64LE() : this.readFloat64BE()
             default:
                 kind satisfies never
-                throw new Error(`Unknown type: ${kind}`)
+                throw new Error(`Unknown type: ${String(kind)}`)
         }
     }
 

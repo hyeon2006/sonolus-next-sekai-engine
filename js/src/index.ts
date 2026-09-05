@@ -1,4 +1,5 @@
-import { DatabaseEngineItem, LevelData } from '@sonolus/core'
+import { DatabaseEngineItem, LevelData, TextFunction } from '@sonolus/core'
+
 import { isExtendedLevelData } from './extended/analyze.js'
 import {
     type ExtendedEntityData,
@@ -82,22 +83,18 @@ export const convertToLevelData = (
 export const version = '0.0.0'
 
 export const engineFullName = {
-    en: 'Next SEKAI',
+    en: 'Next RUSH',
 } as const
 
 export const engineShortName = {
-    en: 'Next SEKAI',
+    en: 'Next RUSH',
 } as const
 
 export const databaseEngineItem = {
     name: 'next-rush',
     version: 13,
-    title: {
-        en: 'Next RUSH',
-    },
-    subtitle: {
-        en: 'Next RUSH',
-    },
+    title: { en: `${TextFunction.Localize}:${JSON.stringify(engineShortName)}` },
+    subtitle: { en: `${TextFunction.Localize}:${JSON.stringify(engineFullName)}` },
     author: {
         en: 'Next RUSH',
     },

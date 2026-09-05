@@ -43,7 +43,7 @@ export const chsLikeToUSC = (score: Score): USC => {
                         requests.laneOffset = Number(value)
                         break
                 }
-            } catch (_e) {
+            } catch {
                 // Noop
             }
         }

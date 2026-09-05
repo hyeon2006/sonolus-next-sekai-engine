@@ -1,4 +1,5 @@
 import { type LevelData, type LevelDataEntity } from '@sonolus/core'
+
 import {
     USC,
     USCColor,

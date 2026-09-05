@@ -86,26 +86,32 @@ export class BinaryWriter {
                 this.writeInt8(value)
                 break
             case 'u32':
-                endian === 'le' ? this.writeUInt32LE(value) : this.writeUInt32BE(value)
+                if (endian === 'le') this.writeUInt32LE(value)
+                else this.writeUInt32BE(value)
                 break
             case 'u16':
-                endian === 'le' ? this.writeUInt16LE(value) : this.writeUInt16BE(value)
+                if (endian === 'le') this.writeUInt16LE(value)
+                else this.writeUInt16BE(value)
                 break
             case 'i32':
-                endian === 'le' ? this.writeInt32LE(value) : this.writeInt32BE(value)
+                if (endian === 'le') this.writeInt32LE(value)
+                else this.writeInt32BE(value)
                 break
             case 'i16':
-                endian === 'le' ? this.writeInt16LE(value) : this.writeInt16BE(value)
+                if (endian === 'le') this.writeInt16LE(value)
+                else this.writeInt16BE(value)
                 break
             case 'f32':
-                endian === 'le' ? this.writeFloat32LE(value) : this.writeFloat32BE(value)
+                if (endian === 'le') this.writeFloat32LE(value)
+                else this.writeFloat32BE(value)
                 break
             case 'f64':
-                endian === 'le' ? this.writeFloat64LE(value) : this.writeFloat64BE(value)
+                if (endian === 'le') this.writeFloat64LE(value)
+                else this.writeFloat64BE(value)
                 break
             default:
                 kind satisfies never
-                throw new Error(`Unknown kind: ${kind}`)
+                throw new Error(`Unknown kind: ${String(kind)}`)
         }
     }
 

@@ -31,7 +31,7 @@
     "check-format": "oxfmt --check",
     "oxc": "npm run check-lint && npm run check-format",
     "format": "oxfmt",
-    "fix": "oxlint --fix src && oxfmt .oxlintrc.json .oxfmtrc.json README.md build.js version.js src",
+    "fix": "oxlint --fix && oxfmt",
     "version": "node ./version.js",
     "build": "tsc -p . && node ./build.js"
   },
