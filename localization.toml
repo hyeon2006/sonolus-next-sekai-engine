@@ -1,16 +1,21 @@
 [options.gauge]
+title.vi = "Thanh Gauge"
 title.en = "Gauge"
 title.ko = "게이지"
 title.fr = "Jauge"
 title.ru = "Шкала жизни"
 title.ja = "ゲージ"
 description.en = "Life gauge type. Heavy and Ultima gauges are harder to pass."
+description.vi = "Loại thanh Life. Thanh Heavy và Ultima khiến việc vượt qua màn chơi khó hơn."
 description.ko = "라이프 게이지 종류입니다. Heavy와 Ultima 게이지는 클리어하기 더 어렵습니다."
 description.fr = "Type de jauge de vie. Les jauges Heavy et Ultima rendent la réussite plus difficile."
 description.ru = "Тип шкалы жизни. Со шкалами Heavy и Ultima пройти уровень сложнее."
 description.ja = "ライフゲージの種類です。HeavyとUltimaのゲージはクリアが難しくなります。"
 
 [options.gauge.values]
+standard.vi = "Tiêu chuẩn"
+heavy.vi = "Heavy"
+ultima.vi = "Ultima"
 standard.en = "Standard"
 standard.ko = "기본"
 standard.fr = "Standard"
