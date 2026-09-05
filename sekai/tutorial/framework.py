@@ -344,6 +344,8 @@ class QueuedTutorialNoteDrawConnectorTo(Record):
             tail_transform=None,
             head_note_alpha=1.0,
             tail_note_alpha=1.0,
+            head_mask=None,
+            tail_mask=None,
         )
         if self.effect_index >= 0 and tail_progress < 1 < head_progress and self.active:
             frac = unlerp(head_progress, tail_progress, 1)

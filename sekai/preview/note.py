@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import cast
 
 from sonolus.script.archetype import EntityRef, PreviewArchetype, StandardImport, entity_data, imported
-from sonolus.script.interval import lerp, unlerp_clamped
+from sonolus.script.interval import lerp
 from sonolus.script.sprite import Sprite
 from sonolus.script.timing import beat_to_time
 
 from sekai.lib.connector import ConnectorKind, ConnectorLayer, SegmentPresentation
-from sekai.lib.ease import EaseType, ease
+from sekai.lib.ease import EaseType
 from sekai.lib.layer import (
     LAYER_NOTE_TICK,
     get_z,
@@ -16,6 +16,8 @@ from sekai.lib.layer import (
 from sekai.lib.layout import FlickDirection
 from sekai.lib.note import (
     NoteKind,
+    get_attach_eased_frac,
+    get_attach_frac,
     get_attach_params,
     get_flick_layer,
     get_note_body_layer,
@@ -25,7 +27,13 @@ from sekai.lib.note import (
 )
 from sekai.lib.options import Options
 from sekai.lib.skin import ArrowRenderType, ArrowSpriteSet, BodyRenderType, BodySpriteSet
-from sekai.lib.stage import get_stage_props
+from sekai.lib.stage import (
+    VisualMask,
+    get_next_event_time,
+    get_stage_props,
+    interpolate_visual_masks,
+    masked_note_extents_by_limits,
+)
 from sekai.play.note import derive_note_archetypes
 from sekai.preview.dynamic_stage import PreviewDynamicStage
 from sekai.preview.layout import (
@@ -125,14 +133,15 @@ class PreviewBaseNote(PreviewArchetype):
         self.preview_adjusted_time = get_adjusted_time(self.target_time, col)
 
     def render(self):
-        if abs(self.lane) > 12:
-            return
         if not self.is_scored:
+            return
+        render_lane, render_size = self.visual_extents_at(self.target_time, left_limit=True)
+        if abs(render_lane) > 12 or render_size <= 0:
             return
         draw_note(
             self.kind,
-            self.lane,
-            self.size,
+            render_lane,
+            render_size,
             self.direction,
             self.preview_col,
             self.preview_y,
@@ -142,7 +151,7 @@ class PreviewBaseNote(PreviewArchetype):
     @property
     def head_ease_frac(self) -> float:
         if self.is_attached:
-            return unlerp_clamped(
+            return get_attach_frac(
                 self.attach_head_ref.get().target_time, self.attach_tail_ref.get().target_time, self.target_time
             )
         else:
@@ -151,27 +160,77 @@ class PreviewBaseNote(PreviewArchetype):
     @property
     def tail_ease_frac(self) -> float:
         if self.is_attached:
-            return unlerp_clamped(
+            return get_attach_frac(
                 self.attach_head_ref.get().target_time, self.attach_tail_ref.get().target_time, self.target_time
             )
         else:
             return 1.0
 
-    def _basic_visual_lane_at(self, t: float) -> float:
+    def _basic_visual_lane_at(self, t: float, left_limit: bool = False) -> float:
         if self.stage_ref.index <= 0:
             return self.lane
         props = get_stage_props(self.stage_ref.get(), t)
-        return props.pivot_lane + self.rel_lane + props.x_lane_translate
+        x_lane_translate = props.x_lane_translate
+        if left_limit:
+            x_lane_translate = get_stage_props(self.stage_ref.get(), t, left_limit=True).x_lane_translate
+        return props.pivot_lane + self.rel_lane + x_lane_translate
 
-    def visual_lane_at(self, t: float) -> float:
+    def visual_lane_at(self, t: float, left_limit: bool = False) -> float:
         if self.is_attached:
             head = self.attach_head_ref.get()
             tail = self.attach_tail_ref.get()
-            note_ease_frac = unlerp_clamped(head.target_time, tail.target_time, self.target_time)
-            head_lane = head._basic_visual_lane_at(t)
-            tail_lane = tail._basic_visual_lane_at(t)
-            return lerp(head_lane, tail_lane, ease(self.connector_ease, note_ease_frac))
-        return self._basic_visual_lane_at(t)
+            head_lane = head._basic_visual_lane_at(t, left_limit=left_limit)
+            tail_lane = tail._basic_visual_lane_at(t, left_limit=left_limit)
+            return lerp(
+                head_lane,
+                tail_lane,
+                get_attach_eased_frac(self.connector_ease, head.target_time, tail.target_time, self.target_time),
+            )
+        return self._basic_visual_lane_at(t, left_limit=left_limit)
+
+    def _basic_visual_mask_at(self, t: float, left_limit: bool = False) -> VisualMask:
+        result = +VisualMask
+        if self.stage_ref.index > 0:
+            props = get_stage_props(self.stage_ref.get(), t, left_limit=left_limit)
+            result.left = props.lane - props.width + props.x_lane_translate
+            result.right = props.lane + props.width + props.x_lane_translate
+            result.enabled = props.mask_notes
+            if result.enabled:
+                result.stage_index = self.stage_ref.index
+        return result
+
+    def visual_mask_at(self, t: float, left_limit: bool = False) -> VisualMask:
+        result = +VisualMask
+        if not self.is_attached:
+            result @= self._basic_visual_mask_at(t, left_limit=left_limit)
+            return result
+
+        head = self.attach_head_ref.get()
+        tail = self.attach_tail_ref.get()
+        result @= interpolate_visual_masks(
+            head._basic_visual_mask_at(t, left_limit=left_limit),
+            tail._basic_visual_mask_at(t, left_limit=left_limit),
+            get_attach_eased_frac(self.connector_ease, head.target_time, tail.target_time, self.target_time),
+        )
+        return result
+
+    def visual_extents_at(self, t: float, left_limit: bool = False) -> tuple[float, float]:
+        render_lane = self.visual_lane_at(t, left_limit=left_limit)
+        mask = self.visual_mask_at(t, left_limit=left_limit)
+        return masked_note_extents_by_limits(render_lane, self.size, mask.left, mask.right, mask.enabled)
+
+    def _basic_next_visual_mask_event_time(self, t: float) -> float:
+        if self.stage_ref.index <= 0:
+            return 1e8
+        return get_next_event_time(self.stage_ref.get(), t)
+
+    def next_visual_mask_event_time(self, t: float) -> float:
+        if not self.is_attached:
+            return self._basic_next_visual_mask_event_time(t)
+        return min(
+            self.attach_head_ref.get()._basic_next_visual_mask_event_time(t),
+            self.attach_tail_ref.get()._basic_next_visual_mask_event_time(t),
+        )
 
 
 def draw_note(

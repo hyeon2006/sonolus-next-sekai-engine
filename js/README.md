@@ -8,6 +8,14 @@ Perspective-lane rhythm game for [Sonolus](https://sonolus.com).
 
 Package version.
 
+### `engineFullName`
+
+Engine full name.
+
+### `engineShortName`
+
+Engine short name.
+
 ### `databaseEngineItem`
 
 Partial database engine item compatible with [sonolus-express](https://github.com/Sonolus/sonolus-express).

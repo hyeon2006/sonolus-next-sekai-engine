@@ -55,6 +55,7 @@ An event that controls the lane and size of a stage's mask.
 * **#BEAT (float)**
 * **lane (float)**
 * **size (float)**
+* **maskNotes (bool)**: When true, note and connector edges are clamped to the stage mask in play, watch, and preview modes. Defaults to false.
 * **ease (EaseType)**
 * **next (ref?[StageMaskChange])**: A reference to the next **StageMaskChange** event.
 

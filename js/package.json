@@ -27,23 +27,23 @@
   },
   "scripts": {
     "check-type": "tsc -p . --noEmit",
-    "check-lint": "oxlint src",
-    "check-format": "oxfmt --check .oxlintrc.json .oxfmtrc.json README.md build.js version.js src",
+    "check-lint": "oxlint",
+    "check-format": "oxfmt --check",
     "oxc": "npm run check-lint && npm run check-format",
-    "format": "oxfmt .oxlintrc.json .oxfmtrc.json README.md build.js version.js src",
+    "format": "oxfmt",
     "fix": "oxlint --fix src && oxfmt .oxlintrc.json .oxfmtrc.json README.md build.js version.js src",
     "version": "node ./version.js",
     "build": "tsc -p . && node ./build.js"
   },
   "dependencies": {
-    "@sonolus/core": "~7.15.3"
+    "@sonolus/core": "~7.15.4"
   },
   "devDependencies": {
     "@sonolus/sonolus.js": "~9.7.3",
-    "@types/node": "^26.1.2",
-    "oxfmt": "~0.61.0",
-    "oxlint": "~1.76.0",
-    "oxlint-tsgolint": "~7.0.2001",
+    "@types/node": "^22.20.1",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.81.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "typescript": "~7.0.2"
   }
 }

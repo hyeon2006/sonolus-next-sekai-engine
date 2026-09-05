@@ -18,16 +18,22 @@ from sonolus.script.array import Array, Dim
 from sonolus.script.bucket import Bucket, Judgment
 from sonolus.script.containers import VarArray
 from sonolus.script.globals import level_memory
-from sonolus.script.interval import Interval, lerp, remap_clamped, unlerp_clamped
+from sonolus.script.interval import Interval, lerp
 from sonolus.script.quad import Quad
-from sonolus.script.runtime import Touch, delta_time, input_offset, offset_adjusted_time, time, touches
+from sonolus.script.runtime import Touch, delta_time, input_offset, offset_adjusted_time, time
 from sonolus.script.timing import beat_to_time
 
 from sekai.debug import DISABLE_NOTES
 from sekai.lib import archetype_names
 from sekai.lib.buckets import WINDOW_SCALE, SekaiWindow
-from sekai.lib.connector import ActiveConnectorInfo, ConnectorKind, ConnectorLayer, SegmentPresentation
-from sekai.lib.ease import EaseType, ease
+from sekai.lib.connector import (
+    ActiveConnectorInfo,
+    ConnectorKind,
+    ConnectorLayer,
+    SegmentPresentation,
+    get_connector_fractions,
+)
+from sekai.lib.ease import EaseType
 from sekai.lib.layout import (
     DynamicLayout,
     FlickDirection,
@@ -48,6 +54,8 @@ from sekai.lib.note import (
     damage_tick_input_start_beat,
     draw_hitbox_overlay,
     draw_note,
+    get_attach_eased_frac,
+    get_attach_frac,
     get_attach_params,
     get_leniency,
     get_note_bucket,
@@ -66,7 +74,15 @@ from sekai.lib.note import (
     schedule_note_auto_sfx,
 )
 from sekai.lib.options import Options
-from sekai.lib.stage import DivisionParity, JudgeLineStyle, get_stage_props, resolve_judge_line_style
+from sekai.lib.stage import (
+    DivisionParity,
+    JudgeLineStyle,
+    VisualMask,
+    get_stage_props,
+    interpolate_visual_masks,
+    masked_note_extents_by_limits,
+    resolve_judge_line_style,
+)
 from sekai.lib.timescale import (
     CompositeTime,
     group_force_note_speed,
@@ -223,8 +239,8 @@ class BaseNote(PlayArchetype):
             # attach_head.init_data()
             # attach_tail.init_data()
             self.connector_ease = attach_head.connector_ease
-            self.attach_eased_frac = ease(
-                self.connector_ease, unlerp_clamped(attach_head.target_time, attach_tail.target_time, self.target_time)
+            self.attach_eased_frac = get_attach_eased_frac(
+                self.connector_ease, attach_head.target_time, attach_tail.target_time, self.target_time
             )
             lane, size = get_attach_params(
                 ease_type=attach_head.connector_ease,
@@ -240,19 +256,18 @@ class BaseNote(PlayArchetype):
             self.size = size
             self.visual_start_time = min(attach_head.visual_start_time, attach_tail.visual_start_time)
             self.start_time = min(self.visual_start_time, self.input_interval.start)
-            self.target_y_offset = remap_clamped(
-                attach_head.target_time,
-                attach_tail.target_time,
+            self.target_y_offset = lerp(
                 attach_head._basic_y_offset_at(self.target_time, left_limit=True),
                 attach_tail._basic_y_offset_at(self.target_time, left_limit=True),
-                self.target_time,
+                get_attach_frac(attach_head.target_time, attach_tail.target_time, self.target_time),
             )
 
         if self.is_scored:
             schedule_note_auto_sfx(self.effect_kind, self.target_time)
+            hitbox_lane, hitbox_size = self.visual_extents_at(self.target_time, left_limit=True)
             self.hitbox @= compute_hitbox_at_time(
-                self.lane,
-                self.size,
+                hitbox_lane,
+                hitbox_size,
                 get_leniency(self.kind),
                 self.target_time,
                 self.target_y_offset,
@@ -306,7 +321,9 @@ class BaseNote(PlayArchetype):
                 self.complete()
                 return
             elif self.is_slide_end_flick:
-                has_ongoing_touch = any(t.id == self.best_touch_id and not t.ended for t in touches())
+                has_ongoing_touch = any(
+                    t.id == self.best_touch_id and not t.ended for t in input_manager.processed_touches()
+                )
                 if not has_ongoing_touch:
                     self.complete()
                     return
@@ -425,6 +442,9 @@ class BaseNote(PlayArchetype):
             return
         if self.kind == NoteKind.HIDE_TICK:
             return
+        render_lane, render_size = self.visual_extents
+        if render_size <= 0:
+            return
         stage_transform = +StageTransform
         if self.has_stage_transform():
             stage_transform @= self.visual_stage_transform()
@@ -432,8 +452,8 @@ class BaseNote(PlayArchetype):
             stage_transform @= identity_stage_transform()
         draw_note(
             self.kind,
-            self.visual_lane,
-            self.size,
+            render_lane,
+            render_size,
             self.visual_progress,
             self.direction,
             self.target_time,
@@ -442,7 +462,7 @@ class BaseNote(PlayArchetype):
         )
 
     def draw_hitbox(self):
-        if not Options.show_hitboxes or not self.is_scored:
+        if not Options.allow_debug_options_in_play_mode or not Options.show_hitboxes or not self.is_scored:
             return
         draw_start = hitbox_draw_start(self.kind, self.unadjusted_input_interval.start, self.target_time)
         if draw_start <= offset_adjusted_time() <= self.unadjusted_input_interval.end:
@@ -528,7 +548,9 @@ class BaseNote(PlayArchetype):
 
         if self.is_trace or self.is_trace_flick or self.is_slide_end_flick:
             if self.is_slide_end_flick and self.best_touch_id != -1:
-                has_ongoing_touch = any(t.id == self.best_touch_id and not t.ended for t in touches())
+                has_ongoing_touch = any(
+                    t.id == self.best_touch_id and not t.ended for t in input_manager.processed_touches()
+                )
                 if has_ongoing_touch:
                     return False
 
@@ -539,7 +561,9 @@ class BaseNote(PlayArchetype):
                 last_resolved_time = NoteMemory.flick_resolved_times[self.best_touch_id % 32]
                 if last_resolved_time > self.target_time:
                     return True
-                has_ongoing_touch = any(t.id == self.best_touch_id and not t.ended for t in touches())
+                has_ongoing_touch = any(
+                    t.id == self.best_touch_id and not t.ended for t in input_manager.processed_touches()
+                )
                 return not has_ongoing_touch
             else:
                 return False
@@ -560,7 +584,7 @@ class BaseNote(PlayArchetype):
             if offset_adjusted_time() < self.target_time + self.perfect_window_end:
                 return False
             # Otherwise, see if there's any ongoing touches in the hitbox.
-            for touch in touches():
+            for touch in input_manager.processed_touches():
                 if not touch.ended and self.hitbox.bounds.contains_point(touch.position):
                     return False
             # If we're past the perfect window, and there are no ongoing touches in the hitbox, we can trigger to
@@ -570,11 +594,12 @@ class BaseNote(PlayArchetype):
     def terminate(self):
         if self.should_play_hit_effects and self.kind != NoteKind.HIDE_TICK:
             # We do this here for parallelism, and to reduce compilation time.
+            render_lane, render_size = self.visual_extents
             play_note_hit_effects(
                 self.kind,
                 self.effect_kind,
-                self.visual_lane,
-                self.size,
+                render_lane,
+                render_size,
                 self.direction,
                 self.result.judgment,
                 y_offset=self.visual_y_offset,
@@ -607,7 +632,7 @@ class BaseNote(PlayArchetype):
             return
         if self.captured_touch_id == 0:
             return
-        touch = next(tap for tap in touches() if tap.id == self.captured_touch_id)
+        touch = next(tap for tap in input_manager.processed_touches() if tap.id == self.captured_touch_id)
         self.judge(touch.start_time)
 
     def handle_release_input(self):
@@ -615,7 +640,7 @@ class BaseNote(PlayArchetype):
             return
         if self.captured_touch_id == 0:
             return
-        touch = next(tap for tap in touches() if tap.id == self.captured_touch_id)
+        touch = next(tap for tap in input_manager.processed_touches() if tap.id == self.captured_touch_id)
         self.judge(touch.time)
 
     def handle_flick_input(self):
@@ -629,7 +654,7 @@ class BaseNote(PlayArchetype):
 
         wrong_way_touch_time = -1.0
 
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if self.check_touch_is_eligible_for_trace(touch) and touch.started:
                 input_manager.disallow_empty(touch)
             if not self.check_touch_touch_is_eligible_for_flick(touch):
@@ -650,7 +675,7 @@ class BaseNote(PlayArchetype):
         if self.should_do_delayed_trigger():
             return
         has_touch = False
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if (
                 self.kind in (NoteKind.NORM_TAIL_FLICK, NoteKind.CRIT_TAIL_FLICK)
                 and touch.started
@@ -681,7 +706,7 @@ class BaseNote(PlayArchetype):
         has_touch = False
         has_correct_direction_touch = False
         current_touch_id = -1
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.check_touch_is_eligible_for_trace(touch):
                 continue
             input_manager.disallow_empty(touch)
@@ -720,7 +745,7 @@ class BaseNote(PlayArchetype):
 
     def handle_tick_input(self):
         if self.tick_head_ref.index > 0 or (self.is_attached and self.attach_head_ref.index > 0):
-            for touch in touches():
+            for touch in input_manager.processed_touches():
                 if not self.hitbox.bounds.contains_point(touch.position):
                     continue
                 input_manager.disallow_empty(touch)
@@ -732,7 +757,7 @@ class BaseNote(PlayArchetype):
                 return
         else:
             has_touch = False
-            for touch in touches():
+            for touch in input_manager.processed_touches():
                 if not self.hitbox.bounds.contains_point(touch.position):
                     continue
                 input_manager.disallow_empty(touch)
@@ -747,7 +772,7 @@ class BaseNote(PlayArchetype):
 
     def handle_damage_input(self):
         has_touch = False
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.hitbox.bounds.contains_point(touch.position):
                 continue
             input_manager.disallow_empty(touch)
@@ -773,7 +798,7 @@ class BaseNote(PlayArchetype):
         if time() > self.input_interval.end:
             return
         has_touch = False
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not self.hitbox.bounds.contains_point(touch.position):
                 continue
             input_manager.disallow_empty(touch)
@@ -1009,11 +1034,11 @@ class BaseNote(PlayArchetype):
             head_frac = (
                 0.0
                 if current_time < attach_head.target_time
-                else unlerp_clamped(attach_head.target_time, attach_tail.target_time, current_time)
+                else get_attach_frac(attach_head.target_time, attach_tail.target_time, current_time)
             )
             tail_frac = 1.0
-            frac = unlerp_clamped(attach_head.target_time, attach_tail.target_time, self.target_time)
-            return remap_clamped(head_frac, tail_frac, head_progress, tail_progress, frac)
+            frac = get_attach_frac(attach_head.target_time, attach_tail.target_time, self.target_time)
+            return lerp(head_progress, tail_progress, get_attach_frac(head_frac, tail_frac, frac))
         else:
             return progress_to(
                 self.target_scaled_time,
@@ -1029,7 +1054,7 @@ class BaseNote(PlayArchetype):
         if self.stage_ref.index <= 0:
             return self.lane
         stage = self.stage_ref.get()
-        if t == stage.props_time:
+        if t == time():
             return stage.props.pivot_lane + self.rel_lane
         return get_stage_props(stage, t).pivot_lane + self.rel_lane
 
@@ -1045,6 +1070,63 @@ class BaseNote(PlayArchetype):
         return self.visual_lane_at(time())
 
     @property
+    def _basic_visual_mask(self) -> VisualMask:
+        result = +VisualMask
+        if self.stage_ref.index > 0:
+            props = self.stage_ref.get().props
+            result.left = props.lane - props.width
+            result.right = props.lane + props.width
+            result.enabled = props.mask_notes
+            if result.enabled:
+                result.stage_index = self.stage_ref.index
+        return result
+
+    def _basic_visual_mask_at(self, t: float, left_limit: bool = False) -> VisualMask:
+        result = +VisualMask
+        if self.stage_ref.index > 0:
+            props = get_stage_props(self.stage_ref.get(), t, left_limit=left_limit)
+            result.left = props.lane - props.width
+            result.right = props.lane + props.width
+            result.enabled = props.mask_notes
+            if result.enabled:
+                result.stage_index = self.stage_ref.index
+        return result
+
+    @property
+    def visual_mask(self) -> VisualMask:
+        result = +VisualMask
+        if not self.is_attached:
+            result @= self._basic_visual_mask
+            return result
+
+        head_mask = self.attach_head_ref.get()._basic_visual_mask
+        tail_mask = self.attach_tail_ref.get()._basic_visual_mask
+        result @= interpolate_visual_masks(head_mask, tail_mask, self.attach_eased_frac)
+        return result
+
+    def visual_mask_at(self, t: float, left_limit: bool = False) -> VisualMask:
+        result = +VisualMask
+        if not self.is_attached:
+            result @= self._basic_visual_mask_at(t, left_limit=left_limit)
+            return result
+
+        head_mask = self.attach_head_ref.get()._basic_visual_mask_at(t, left_limit=left_limit)
+        tail_mask = self.attach_tail_ref.get()._basic_visual_mask_at(t, left_limit=left_limit)
+        result @= interpolate_visual_masks(head_mask, tail_mask, self.attach_eased_frac)
+        return result
+
+    def visual_extents_at(self, t: float, left_limit: bool = False) -> tuple[float, float]:
+        render_lane = self.visual_lane_at(t)
+        mask = self.visual_mask_at(t, left_limit=left_limit)
+        return masked_note_extents_by_limits(render_lane, self.size, mask.left, mask.right, mask.enabled)
+
+    @property
+    def visual_extents(self) -> tuple[float, float]:
+        render_lane = self.visual_lane
+        mask = self.visual_mask
+        return masked_note_extents_by_limits(render_lane, self.size, mask.left, mask.right, mask.enabled)
+
+    @property
     def _basic_visual_y_offset(self) -> float:
         if self.stage_ref.index > 0:
             return self.stage_ref.get().props.y_offset
@@ -1056,12 +1138,10 @@ class BaseNote(PlayArchetype):
         if self.is_attached:
             head = self.attach_head_ref.get()
             tail = self.attach_tail_ref.get()
-            return remap_clamped(
-                head.target_time,
-                tail.target_time,
+            return lerp(
                 head._basic_visual_y_offset,
                 tail._basic_visual_y_offset,
-                self.target_time,
+                get_attach_frac(head.target_time, tail.target_time, self.target_time),
             )
         return self._basic_visual_y_offset
 
@@ -1077,12 +1157,10 @@ class BaseNote(PlayArchetype):
         if self.is_attached:
             head = self.attach_head_ref.get()
             tail = self.attach_tail_ref.get()
-            return remap_clamped(
-                head.target_time,
-                tail.target_time,
+            return lerp(
                 head._basic_visual_note_alpha,
                 tail._basic_visual_note_alpha,
-                self.target_time,
+                get_attach_frac(head.target_time, tail.target_time, self.target_time),
             )
         return self._basic_visual_note_alpha
 
@@ -1091,18 +1169,16 @@ class BaseNote(PlayArchetype):
             return 0.0
         return get_stage_props(self.stage_ref.get(), t, left_limit=left_limit).y_offset
 
-    def y_offset_at(self, t: float) -> float:
+    def y_offset_at(self, t: float, left_limit: bool = False) -> float:
         if self.is_attached:
             head = self.attach_head_ref.get()
             tail = self.attach_tail_ref.get()
-            return remap_clamped(
-                head.target_time,
-                tail.target_time,
-                head._basic_y_offset_at(t),
-                tail._basic_y_offset_at(t),
-                self.target_time,
+            return lerp(
+                head._basic_y_offset_at(t, left_limit=left_limit),
+                tail._basic_y_offset_at(t, left_limit=left_limit),
+                get_attach_frac(head.target_time, tail.target_time, self.target_time),
             )
-        return self._basic_y_offset_at(t)
+        return self._basic_y_offset_at(t, left_limit=left_limit)
 
     def _basic_visual_stage_transform(self) -> StageTransform:
         result = +StageTransform
@@ -1179,7 +1255,7 @@ class BaseNote(PlayArchetype):
             result @= blend_stage_transform(
                 head._basic_stage_transform_at(t, left_limit=left_limit),
                 tail._basic_stage_transform_at(t, left_limit=left_limit),
-                remap_clamped(head.target_time, tail.target_time, 0.0, 1.0, self.target_time),
+                get_attach_eased_frac(self.connector_ease, head.target_time, tail.target_time, self.target_time),
             )
         else:
             result @= self._basic_stage_transform_at(t, left_limit=left_limit)
@@ -1217,7 +1293,7 @@ class BaseNote(PlayArchetype):
     @property
     def head_ease_frac(self) -> float:
         if self.is_attached:
-            return unlerp_clamped(
+            return get_attach_frac(
                 self.attach_head_ref.get().target_time, self.attach_tail_ref.get().target_time, self.target_time
             )
         else:
@@ -1226,7 +1302,7 @@ class BaseNote(PlayArchetype):
     @property
     def tail_ease_frac(self) -> float:
         if self.is_attached:
-            return unlerp_clamped(
+            return get_attach_frac(
                 self.attach_head_ref.get().target_time, self.attach_tail_ref.get().target_time, self.target_time
             )
         else:
@@ -1252,34 +1328,43 @@ class BaseNote(PlayArchetype):
 
 
 def compute_slide_input_bounds(ease_type: EaseType, head: BaseNote, tail: BaseNote, t: float, leniency: float) -> Quad:
-    eff_head = head.effective_attach_head
-    eff_tail = tail.effective_attach_tail
-    input_lane, input_size = get_attach_params(
-        ease_type=ease_type,
-        head_lane=eff_head._basic_visual_lane_at(t),
-        head_size=eff_head.size,
-        head_target_time=eff_head.target_time,
-        tail_lane=eff_tail._basic_visual_lane_at(t),
-        tail_size=eff_tail.size,
-        tail_target_time=eff_tail.target_time,
-        target_time=t,
-    )
-    input_y_offset = remap_clamped(
+    input_frac, input_interp_frac = get_connector_fractions(
+        ease_type,
         head.target_time,
+        head.head_ease_frac,
         tail.target_time,
-        head.y_offset_at(t),
-        tail.y_offset_at(t),
+        tail.tail_ease_frac,
         t,
     )
+    input_lane = lerp(head.visual_lane_at(t), tail.visual_lane_at(t), input_interp_frac)
+    input_size = lerp(head.size, tail.size, input_interp_frac)
+    input_mask = interpolate_visual_masks(
+        head.visual_mask_at(t, left_limit=True),
+        tail.visual_mask_at(t, left_limit=True),
+        input_interp_frac,
+    )
+    input_lane, input_size = masked_note_extents_by_limits(
+        input_lane,
+        input_size,
+        input_mask.left,
+        input_mask.right,
+        input_mask.enabled,
+    )
+    input_y_offset = lerp(
+        head.y_offset_at(t, left_limit=True),
+        tail.y_offset_at(t, left_limit=True),
+        input_frac,
+    )
     # Input arrives one input offset late, so the whole view state (stage transforms and layout)
-    # is queried at t, looking back by the offset rather than using the current frame.
+    # is queried at t, looking back by the offset rather than using the current frame. Use the
+    # left limit consistently with fixed-note judgment geometry at an event on the same timestamp.
     input_transform = blend_stage_transform(
-        head._basic_stage_transform_at(t),
-        tail._basic_stage_transform_at(t),
-        unlerp_clamped(head.target_time, tail.target_time, t),
+        head.stage_transform_at(t, left_limit=True),
+        tail.stage_transform_at(t, left_limit=True),
+        input_interp_frac,
     )
     return compute_hitbox(
-        camera_layout_transform_at_time(t),
+        camera_layout_transform_at_time(t, left_limit=True),
         input_lane,
         input_size,
         leniency,

@@ -2,14 +2,17 @@ from __future__ import annotations
 
 from sonolus.script.archetype import PlayArchetype, callback
 from sonolus.script.array import Array, Dim
-from sonolus.script.containers import ArrayMap, ArraySet
+from sonolus.script.containers import ArrayMap, ArraySet, VarArray
 from sonolus.script.globals import level_memory
-from sonolus.script.runtime import Touch, time, touches
+from sonolus.script.interval import clamp
+from sonolus.script.iterator import maybe_next
+from sonolus.script.runtime import Touch, screen, time, touches
 
 from sekai.lib import archetype_names
 from sekai.lib.buckets import SLIDE_END_LOCKOUT_DURATION
-from sekai.lib.layout import DynamicLayout, segment_closeness_score
+from sekai.lib.layout import DynamicLayout, Layout, segment_closeness_score, stage_aspect_ratio_locked
 from sekai.lib.note import is_head
+from sekai.lib.options import Options
 from sekai.play import note
 
 INPUT_SLOTS = 16
@@ -18,11 +21,37 @@ INPUT_SCORE_TIME_SCALE = 0.05
 
 @level_memory
 class InputState:
+    processed_touches: VarArray[Touch, Dim[32]]
     disallowed_empty_touches: ArraySet[int, Dim[32]]
     disallowed_release_touches: ArrayMap[int, float, Dim[32]]
     last_started_touch_id: int
     last_started_touch_disallowed: bool
     previous_touch_disallowed: bool
+
+
+def preprocess_touches():
+    result = InputState.processed_touches
+    result.clear()
+
+    should_correct = Options.edge_touch_correction and stage_aspect_ratio_locked()
+    field_bottom = screen().center.y - Layout.field_h / 2
+    field_top = screen().center.y + Layout.field_h / 2
+
+    for raw_touch in touches():
+        if result.is_full():
+            break
+
+        touch = +raw_touch
+        if should_correct:
+            prev_position = raw_touch.prev_position
+            touch.position.y = clamp(raw_touch.position.y, field_bottom, field_top)
+            touch.start_position.y = clamp(raw_touch.start_position.y, field_bottom, field_top)
+            touch.delta.y = touch.position.y - clamp(prev_position.y, field_bottom, field_top)
+        result.append(touch)
+
+
+def processed_touches() -> VarArray[Touch, Dim[32]]:
+    return InputState.processed_touches
 
 
 def disallow_empty(touch: Touch):
@@ -55,8 +84,9 @@ def is_allowed_release(touch: Touch, target_time: float) -> bool:
 class InputManager(PlayArchetype):
     name = archetype_names.INPUT_MANAGER
 
-    @callback(order=-1)
+    @callback(order=-3)
     def update_sequential(self):
+        preprocess_touches()
         note.NoteMemory.active_tap_input_notes.clear()
         note.NoteMemory.active_release_input_notes.clear()
 
@@ -70,22 +100,26 @@ class InputManager(PlayArchetype):
 def update_input_state():
     old_disallowed_empty_touches = +InputState.disallowed_empty_touches
     InputState.disallowed_empty_touches.clear()
+    for touch in processed_touches():
+        if touch.started:
+            InputState.previous_touch_disallowed = InputState.last_started_touch_disallowed
+            InputState.last_started_touch_id = touch.id
+            InputState.last_started_touch_disallowed = False
+    for existing_id in old_disallowed_empty_touches:
+        maybe_touch = maybe_next(touch for touch in processed_touches() if touch.id == existing_id)
+        if maybe_touch.is_nothing:
+            continue
+        touch = maybe_touch.get()
+        disallow_empty(touch)
 
     old_disallowed_release_touches = +InputState.disallowed_release_touches
     InputState.disallowed_release_touches.clear()
-
-    for touch in touches():
-        if touch.started:
-            InputState.previous_touch_disallowed = InputState.last_started_touch_disallowed
-
-            InputState.last_started_touch_id = touch.id
-            InputState.last_started_touch_disallowed = False
-
-        if touch.id in old_disallowed_empty_touches:
-            disallow_empty(touch)
-
-        if touch.id in old_disallowed_release_touches:
-            InputState.disallowed_release_touches[touch.id] = old_disallowed_release_touches[touch.id]
+    for existing_id, until_time in old_disallowed_release_touches.items():
+        maybe_touch = maybe_next(touch for touch in processed_touches() if touch.id == existing_id)
+        if maybe_touch.is_nothing:
+            continue
+        touch = maybe_touch.get()
+        InputState.disallowed_release_touches[touch.id] = until_time
 
 
 def is_last_started_touch_disallowed() -> bool:
@@ -102,7 +136,7 @@ def preassign_taps():
 
     input_assigned = +Array[bool, Dim[INPUT_SLOTS]]
     for i in range(INPUT_SLOTS):
-        if i >= len(touches()) or not touches()[i].started:
+        if i >= len(processed_touches()) or not processed_touches()[i].started:
             input_assigned[i] = True
 
     scores = +Array[float, Dim[INPUT_SLOTS]]
@@ -116,7 +150,7 @@ def preassign_taps():
         for i in range(INPUT_SLOTS):
             if input_assigned[i]:
                 continue
-            touch = touches()[i]
+            touch = processed_touches()[i]
             for note_i in range(len(active)):
                 target_note = active[note_i].get()
                 if target_note.captured_touch_id != 0:
@@ -148,7 +182,7 @@ def preassign_taps():
             if not is_best:
                 continue
             target_note = active[note_i].get()
-            touch = touches()[i]
+            touch = processed_touches()[i]
             disallow_empty(touch)
             if not is_head(target_note.kind):
                 disallow_release(touch, target_note.target_time + SLIDE_END_LOCKOUT_DURATION)
@@ -167,7 +201,7 @@ def preassign_releases():
 
     input_assigned = +Array[bool, Dim[INPUT_SLOTS]]
     for i in range(INPUT_SLOTS):
-        if i >= len(touches()) or not touches()[i].ended:
+        if i >= len(processed_touches()) or not processed_touches()[i].ended:
             input_assigned[i] = True
 
     scores = +Array[float, Dim[INPUT_SLOTS]]
@@ -181,7 +215,7 @@ def preassign_releases():
         for i in range(INPUT_SLOTS):
             if input_assigned[i]:
                 continue
-            touch = touches()[i]
+            touch = processed_touches()[i]
             for note_i in range(len(active)):
                 target_note = active[note_i].get()
                 if target_note.captured_touch_id != 0:
@@ -194,7 +228,7 @@ def preassign_releases():
                 if target_note.active_head_ref.index > 0:
                     head_bounds = target_note.active_head_ref.get().active_connector_info.input_bounds
                     ongoing = False
-                    for t in touches():
+                    for t in processed_touches():
                         if not t.ended and head_bounds.contains_point(t.position):
                             ongoing = True
                             break
@@ -224,7 +258,7 @@ def preassign_releases():
             if not is_best:
                 continue
             target_note = active[note_i].get()
-            touch = touches()[i]
+            touch = processed_touches()[i]
             disallow_empty(touch)
             target_note.captured_touch_id = touch.id
             target_note.captured_touch_time = touch.time

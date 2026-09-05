@@ -81,6 +81,14 @@ export const convertToLevelData = (
 
 export const version = '0.0.0'
 
+export const engineFullName = {
+    en: 'Next SEKAI',
+} as const
+
+export const engineShortName = {
+    en: 'Next SEKAI',
+} as const
+
 export const databaseEngineItem = {
     name: 'next-rush',
     version: 13,

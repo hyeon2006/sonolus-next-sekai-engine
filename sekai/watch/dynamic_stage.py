@@ -114,7 +114,6 @@ class WatchDynamicStage(WatchArchetype):
     draw_end_time: float = entity_data()
 
     props: StageProps = shared_memory()
-    props_time: float = shared_memory()
 
     @callback(order=-2)
     def preprocess(self):
@@ -128,7 +127,6 @@ class WatchDynamicStage(WatchArchetype):
         self.end_time = get_end_time(self)
         self.draw_start_time = get_draw_start_time(self)
         self.draw_end_time = get_draw_end_time(self)
-        self.props_time = -1e8
 
     def spawn_time(self) -> float:
         return self.start_time
@@ -139,7 +137,6 @@ class WatchDynamicStage(WatchArchetype):
     @callback(order=-1)
     def update_sequential(self):
         self.props @= get_stage_props(self)
-        self.props_time = time()
         self.fever_boundary()
 
     def fever_boundary(self):
@@ -206,6 +203,7 @@ class WatchStageMaskChange(WatchArchetype, BaseEvent):
     beat: StandardImport.BEAT
     lane: float = imported()
     size: float = imported()
+    mask_notes: bool = imported(name="maskNotes", default=False)
     ease: EaseType = imported()
     next_ref: EntityRef[WatchStageMaskChange] = imported(name="next")
 
@@ -262,7 +260,7 @@ class WatchStageStyleChange(WatchArchetype, BaseEvent):
     ease: EaseType = imported()
     next_ref: EntityRef[WatchStageStyleChange] = imported(name="next")
 
-    time: float = entity_data()
+    time: float = shared_memory()
 
     @callback(order=-3)
     def preprocess(self):

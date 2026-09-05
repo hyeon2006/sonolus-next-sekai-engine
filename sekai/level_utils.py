@@ -114,6 +114,7 @@ class LevelStageMaskChange:
     lane: float
     size: float
     ease: EaseType = EaseType.LINEAR
+    mask_notes: bool = False
 
 
 @dataclass
@@ -394,6 +395,14 @@ def build_level(
                 connector.active_tail_ref = built[section_tail_idx].ref()
             out_entities.append(connector)
 
+        # Link each tracked slide span to its active head.
+        for span_head_idx, span_tail_idx in itertools.pairwise(separator_indices):
+            if slide.notes[span_head_idx].segment_kind not in _INPUT_TRACKED_SEGMENT_KINDS:
+                continue
+            section_head_idx = section_by_span_head[span_head_idx][0]
+            for note_idx in range(span_head_idx, span_tail_idx + 1):
+                built[note_idx].active_head_ref = built[section_head_idx].ref()
+
         _emit_damage_ticks(slide, built, non_attached, separator_indices, emit_note)
 
     for note, slide in pending_attachments:
@@ -585,6 +594,7 @@ def _build_stage(level_stage: LevelStage) -> tuple[DynamicStage, list[PlayArchet
             beat=m.beat,
             lane=m.lane,
             size=m.size,
+            mask_notes=m.mask_notes,
             ease=m.ease,
         )
         for m in sorted(level_stage.mask_changes, key=lambda c: c.beat)

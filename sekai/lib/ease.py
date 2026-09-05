@@ -2,6 +2,7 @@ from enum import IntEnum
 from typing import assert_never
 
 from sonolus.script.easing import ease_in_out_quad, ease_in_quad, ease_out_in_quad, ease_out_quad, linstep
+from sonolus.script.interval import unlerp_clamped
 
 
 class EaseType(IntEnum):
@@ -11,6 +12,12 @@ class EaseType(IntEnum):
     OUT_QUAD = 3
     IN_OUT_QUAD = 4
     OUT_IN_QUAD = 5
+
+
+def safe_unlerp_clamped(a: float, b: float, x: float, fallback: float = 0.5) -> float:
+    if abs(a - b) < 1e-6:
+        return fallback
+    return unlerp_clamped(a, b, x)
 
 
 def ease(ease_type: EaseType, x: float) -> float:

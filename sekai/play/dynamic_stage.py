@@ -12,7 +12,7 @@ from sonolus.script.archetype import (
     shared_memory,
 )
 from sonolus.script.interval import clamp
-from sonolus.script.runtime import time, touches
+from sonolus.script.runtime import time
 from sonolus.script.timing import beat_to_bpm, beat_to_time
 
 from sekai.lib import archetype_names
@@ -132,7 +132,6 @@ class DynamicStage(PlayArchetype):
     draw_end_time: float = entity_data()
 
     props: StageProps = shared_memory()
-    props_time: float = shared_memory()
 
     @callback(order=-2)
     def preprocess(self):
@@ -146,7 +145,6 @@ class DynamicStage(PlayArchetype):
         self.end_time = get_end_time(self)
         self.draw_start_time = get_draw_start_time(self)
         self.draw_end_time = get_draw_end_time(self)
-        self.props_time = -1e8
 
     def spawn_order(self) -> float:
         return self.start_time
@@ -157,7 +155,6 @@ class DynamicStage(PlayArchetype):
     @callback(order=-1)
     def update_sequential(self):
         self.props @= get_stage_props(self)
-        self.props_time = time()
         if time() >= self.end_time:
             self.despawn = True
             return
@@ -222,7 +219,7 @@ class DynamicStage(PlayArchetype):
         total_hitbox = transform_mat.transform_quad(layout_lane_area(leftmost - 1.5, rightmost + 1.5))
         empty_lanes = StageMemory.empty_lanes
         empty_triggered = False
-        for touch in touches():
+        for touch in input_manager.processed_touches():
             if not total_hitbox.contains_point(touch.position):
                 continue
             if not input_manager.is_allowed_empty(touch):
@@ -290,6 +287,7 @@ class StageMaskChange(PlayArchetype, BaseEvent):
     beat: StandardImport.BEAT
     lane: float = imported()
     size: float = imported()
+    mask_notes: bool = imported(name="maskNotes", default=False)
     ease: EaseType = imported()
     next_ref: EntityRef[StageMaskChange] = imported(name="next")
 
@@ -358,7 +356,7 @@ class StageStyleChange(PlayArchetype, BaseEvent):
     ease: EaseType = imported()
     next_ref: EntityRef[StageStyleChange] = imported(name="next")
 
-    time: float = entity_data()
+    time: float = shared_memory()
 
     @callback(order=-3)
     def preprocess(self):

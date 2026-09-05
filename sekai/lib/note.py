@@ -7,7 +7,7 @@ from sonolus.script.archetype import EntityRef, HapticType, PlayArchetype, Watch
 from sonolus.script.bucket import Bucket, Judgment
 from sonolus.script.easing import ease_in_cubic
 from sonolus.script.effect import Effect
-from sonolus.script.interval import clamp, lerp, remap_clamped, unlerp_clamped
+from sonolus.script.interval import clamp, lerp, unlerp_clamped
 from sonolus.script.quad import Quad
 from sonolus.script.runtime import is_tutorial, is_watch, level_life, level_score, time
 from sonolus.script.sprite import Sprite
@@ -35,7 +35,7 @@ from sekai.lib.buckets import (
     SekaiWindow,
 )
 from sekai.lib.connector import ActiveConnectorKind, ConnectorKind, get_active_connector_z_offset
-from sekai.lib.ease import EaseType, ease
+from sekai.lib.ease import EaseType, ease, safe_unlerp_clamped
 from sekai.lib.effect import EMPTY_EFFECT, SFX_DISTANCE, Effects, first_available_effect
 from sekai.lib.layer import (
     LAYER_NOTE_ARROW,
@@ -319,6 +319,23 @@ def get_visual_spawn_time(
     )
 
 
+def get_attach_frac(
+    head_target_time: float,
+    tail_target_time: float,
+    target_time: float,
+) -> float:
+    return safe_unlerp_clamped(head_target_time, tail_target_time, target_time)
+
+
+def get_attach_eased_frac(
+    ease_type: EaseType,
+    head_target_time: float,
+    tail_target_time: float,
+    target_time: float,
+) -> float:
+    return ease(ease_type, get_attach_frac(head_target_time, tail_target_time, target_time))
+
+
 def get_attach_params(
     ease_type: EaseType,
     head_lane: float,
@@ -329,11 +346,7 @@ def get_attach_params(
     tail_target_time: float,
     target_time: float,
 ):
-    if abs(head_target_time - tail_target_time) < 1e-6:
-        frac = 0.5
-    else:
-        frac = remap_clamped(head_target_time, tail_target_time, 0.0, 1.0, target_time)
-    eased_frac = ease(ease_type, frac)
+    eased_frac = get_attach_eased_frac(ease_type, head_target_time, tail_target_time, target_time)
     lane = lerp(head_lane, tail_lane, eased_frac)
     size = lerp(head_size, tail_size, eased_frac)
     return lane, size
@@ -1309,7 +1322,7 @@ def schedule_note_slot_effects(
     sprite_set = get_note_sprite_set(kind, direction)
     e = 1e-6
     slot_sprite = sprite_set.slot
-    if slot_sprite.is_available and not single_line:
+    if slot_sprite.is_available and not single_line and size > 0:
         # Same lane assignment as iter_slot_lanes: slots at i + 0.5 + shift for i in [left, right).
         shift = pivot_lane + (0.0 if half_offset else 0.5) - 0.5
         left = floor(lane - shift - size + e)
@@ -1326,7 +1339,7 @@ def schedule_note_slot_effects(
                 transform=transform,
             )
     slot_glow_sprite = sprite_set.slot_glow.get_sprite(judgment)
-    if slot_glow_sprite.is_available:
+    if slot_glow_sprite.is_available and size > 0:
         left = floor(lane - size + e)
         right = ceil(lane + size - e)
         if right > left:

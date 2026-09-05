@@ -64,6 +64,7 @@ from sekai.lib.layout import (
     perspective_rect,
     stage_aspect_ratio_locked,
     stage_cover_amount,
+    test_aspect_active,
     tilt_depth,
     tilt_widened_edge,
     tilt_width_factor,
@@ -159,6 +160,7 @@ class StageProps(Record):
     full_width: float
     division_line_alpha: float
     note_alpha: float
+    mask_notes: bool
     rotate: float
     x_lane_translate: float
     y_lane_translate: float
@@ -211,10 +213,31 @@ class StageProps(Record):
         )
 
 
+class VisualMask(Record):
+    left: float
+    right: float
+    enabled: bool
+    stage_index: int
+
+
+def interpolate_visual_masks(head: VisualMask, tail: VisualMask, frac: float) -> VisualMask:
+    """Return the connector mask at an interpolated point between two notes."""
+    result = +VisualMask
+    if not head.enabled or not tail.enabled:
+        return result
+    result.left = lerp(head.left, tail.left, frac)
+    result.right = lerp(head.right, tail.right, frac)
+    result.enabled = True
+    if head.stage_index > 0 and head.stage_index == tail.stage_index:
+        result.stage_index = head.stage_index
+    return result
+
+
 class StageMaskChangeLike(Protocol):
     time: float
     lane: float
     size: float
+    mask_notes: bool
     ease: EaseType
     next_ref: EntityRef
     prev_ref: EntityRef
@@ -391,6 +414,7 @@ def get_stage_props(stage: DynamicStageLike, target_time: float | None = None, l
     result = +StageProps
     result.order = stage.index
     result.note_alpha = 1.0
+    result.mask_notes = False
 
     first_mask_change_ref = stage.first_mask_change_ref
     first_pivot_change_ref = stage.first_pivot_change_ref
@@ -415,6 +439,7 @@ def get_stage_props(stage: DynamicStageLike, target_time: float | None = None, l
         mask_a = get_event_as(mask_a_ref, _stage_mask_change_archetype())
         result.lane = mask_a.lane
         result.width = mask_a.size
+        result.mask_notes = mask_a.mask_notes
         if mask_b_ref.index > 0:
             mask_b = get_event_as(mask_b_ref, _stage_mask_change_archetype())
             t_a = mask_a.time
@@ -427,6 +452,7 @@ def get_stage_props(stage: DynamicStageLike, target_time: float | None = None, l
         mask_b = get_event_as(mask_b_ref, _stage_mask_change_archetype())
         result.lane = mask_b.lane
         result.width = mask_b.size
+        result.mask_notes = mask_b.mask_notes
 
     # Query pivot changes
     pivot_a_ref, pivot_b_ref = query_event_list(first_pivot_change_ref, t, lambda e: e.time)
@@ -575,6 +601,30 @@ def get_stage_props(stage: DynamicStageLike, target_time: float | None = None, l
     return result
 
 
+def masked_note_extents(lane: float, size: float, props: StageProps, x_translate: float = 0.0) -> tuple[float, float]:
+    """Return the masked visual lane and half-width."""
+    return masked_note_extents_by_limits(
+        lane,
+        size,
+        props.lane - props.width + x_translate,
+        props.lane + props.width + x_translate,
+        props.mask_notes,
+    )
+
+
+def masked_note_extents_by_limits(
+    lane: float, size: float, mask_left: float, mask_right: float, mask_notes: bool
+) -> tuple[float, float]:
+    result_lane = lane
+    result_size = size
+    if mask_notes:
+        left = clamp(lane - size, mask_left, mask_right)
+        right = clamp(lane + size, mask_left, mask_right)
+        result_lane = (left + right) / 2
+        result_size = (right - left) / 2
+    return result_lane, result_size
+
+
 TEST_ASPECT_BOX_EDGE = 0.004
 
 
@@ -601,7 +651,7 @@ def draw_aspect_box(sprite: Sprite, ratio: float, sub: int):
 
 
 def draw_test_aspect_overlay():
-    if not Options.test_aspect_ratio:
+    if not test_aspect_active():
         return
     # Higher sub = drawn on top; 16:9 (the field reference) is drawn last so it sits topmost.
     draw_aspect_box(ActiveSkin.guide_red, 21 / 9, 0)

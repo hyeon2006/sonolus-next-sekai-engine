@@ -1,4 +1,5 @@
 [options.stage_cover]
+title.vi = "Điểm bắt đầu Note"
 title.en = "Note Start Point"
 title.ko = "노트 시작 위치"
 title.fr = "Point de Départ des Notes"
@@ -6,6 +7,7 @@ title.ru = "Точка начала нот"
 title.ja = "ノーツの開始位置"
 
 [options.hidden]
+title.vi = "Điểm kết thúc Note"
 title.en = "Note End Point"
 title.ko = "노트 종료 위치"
 title.fr = "Point de Fin des Notes"
@@ -13,6 +15,7 @@ title.ru = "Точка окончания нот"
 title.ja = "ノーツの終了位置"
 
 [options.vibrate_mode]
+title.vi = "Chế độ rung cảnh báo"
 title.en = "Vibration Mode"
 title.ko = "진동 모드"
 title.fr = "Mode des Vibrations"
@@ -20,6 +23,9 @@ title.ru = "Режим вибрации"
 title.ja = "振動モード"
 
 [options.vibrate_mode.values]
+disabled.vi = "Tắt"
+miss.vi = "Khi Miss"
+miss_and_good.vi = "Khi Miss hoặc Good"
 disabled.en = "Disabled"
 disabled.ko = "사용 안 함"
 disabled.fr = "Désactivées"
@@ -37,6 +43,7 @@ miss_and_good.ru = "На Miss и Good"
 miss_and_good.ja = "MISS・GOOD時"
 
 [options.slide_alpha]
+title.vi = "Độ trong suốt đường nối Note giữ"
 title.en = "Long Note Transparency"
 title.ko = "롱 노트 불투명도"
 title.fr = "Transparence des Notes Longues"
@@ -44,6 +51,7 @@ title.ru = "Прозрачность длинных нот"
 title.ja = "ロングノーツの不透明度"
 
 [options.guide_alpha]
+title.vi = "Độ trong suốt đường Guide"
 title.en = "Guideline Transparency"
 title.ko = "가이드 불투명도"
 title.fr = "Transparence des Lignes Guides"
@@ -51,6 +59,7 @@ title.ru = "Прозрачность направляющих линий"
 title.ja = "ガイドの不透明度"
 
 [options.background_alpha]
+title.vi = "Độ sáng nền"
 title.en = "Background Brightness"
 title.ko = "배경 밝기"
 title.fr = "Luminosité de l'Arrière-plan"
@@ -58,6 +67,7 @@ title.ru = "Яркость заднего фона"
 title.ja = "背景の明るさ"
 
 [options.lane_alpha]
+title.vi = "Độ trong suốt Lane"
 title.en = "Lane Transparency"
 title.ko = "레인 불투명도"
 title.fr = "Transparence des Lanes"
@@ -65,6 +75,7 @@ title.ru = "Прозрачность линий"
 title.ja = "レーンの不透明度"
 
 [options.fever_effect]
+title.vi = "Hiệu ứng Fever"
 title.en = "Fever Effect"
 title.ko = "피버 연출"
 title.fr = "Effet de Fever"
@@ -72,6 +83,9 @@ title.ru = "Эффект лихорадки"
 title.ja = "FEVER演出"
 
 [options.fever_effect.values]
+default.vi = "Tiêu chuẩn"
+lightweight.vi = "Nhẹ"
+none.vi = "Không"
 default.en = "Standard"
 default.ko = "표준"
 default.fr = "Standard"
@@ -89,6 +103,7 @@ none.ru = "Никакой"
 none.ja = "なし"
 
 [options.skill_effect]
+title.vi = "Hiển thị Skill/ON FIRE"
 title.en = "Display Skill/ON FIRE"
 title.ko = "스킬/활약 표시"
 title.fr = "Affichage des Compétences/ON FIRE"
@@ -96,6 +111,7 @@ title.ru = "Отображение навыков/ON FIRE"
 title.ja = "スキル・活躍表示"
 
 [options.sim_line_enabled]
+title.vi = "Đường Multi-Tap"
 title.en = "Multi-Tap Line"
 title.ko = "동시 누르기 라인"
 title.fr = "Ligne d'Appui Simultané"
@@ -103,6 +119,7 @@ title.ru = "Линия одновременного нажатия"
 title.ja = "同時押しライン"
 
 [options.ap_effect]
+title.vi = "Hiệu ứng AP"
 title.en = "AP Effect"
 title.ko = "AP 계속 연출"
 title.fr = "Effet AP"
@@ -110,6 +127,7 @@ title.ru = "Эффект AP"
 title.ja = "AP継続演出"
 
 [options.custom_accuracy]
+title.vi = "LATE/EARLY/WRONG WAY"
 title.en = "LATE/EARLY/WRONG WAY"
 title.ko = "LATE/FAST/FLICK"
 title.fr = "LATE/EARLY/WRONG WAY"
@@ -117,6 +135,7 @@ title.ru = "LATE/EARLY/WRONG WAY"
 title.ja = "LATE/FAST/FLICK"
 
 [options.mirror]
+title.vi = "Lane đối xứng"
 title.en = "Mirrored Lanes"
 title.ko = "미러 모드"
 title.fr = "Lanes en Miroir"
@@ -124,6 +143,7 @@ title.ru = "Зеркальные линии"
 title.ja = "ミラー譜面"
 
 [options.custom_combo]
+title.vi = "Combo tùy chỉnh"
 title.en = "Custom Combo"
 title.ko = "커스텀 콤보"
 title.fr = "Combo Personnalisé"
@@ -131,6 +151,7 @@ title.ru = "Кастомное комбо"
 title.ja = "カスタムコンボ"
 
 [options.custom_score]
+title.vi = "Chỉ báo điểm tùy chỉnh"
 title.en = "Custom Score Indicator"
 title.ko = "커스텀 점수 표시"
 title.fr = "Indicateur de Score Personnalisé"
@@ -138,6 +159,10 @@ title.ru = "Кастомный индикатор счёта"
 title.ja = "カスタムスコア表示"
 
 [options.custom_score.values]
+disable.vi = "Tắt"
+arcade_positive.vi = "Arcade% (+)"
+arcade_negative.vi = "Arcade% (-)"
+accuracy.vi = "Accuracy%"
 disable.en = "Disable"
 disable.ko = "사용 안 함"
 disable.fr = "Désactivé"
@@ -160,6 +185,7 @@ accuracy.ru = "Аккуратность%"
 accuracy.ja = "精度%"
 
 [options.custom_judgment]
+title.vi = "Phán định tùy chỉnh"
 title.en = "Custom Judgment"
 title.ko = "커스텀 판정"
 title.fr = "Jugement Personnalisé"
@@ -167,6 +193,8 @@ title.ru = "Кастомное суждение"
 title.ja = "カスタム判定"
 
 [options.auto_judgment]
+title.vi = "Hiển thị phán định Auto"
+description.vi = "Hiển thị phán định là 'Auto' trong chế độ Watch khi Phán định tùy chỉnh được bật."
 title.en = "Auto Judgment Display"
 title.ko = "Auto 판정 표시"
 title.fr = "Affichage du Jugement Auto"
@@ -179,6 +207,7 @@ description.ru = "Показывает суждение как 'Авто' во �
 description.ja = "カスタム判定が有効な場合、Watchモード中の判定を「Auto」と表示します。"
 
 [options.custom_damage]
+title.vi = "Hiệu ứng sát thương tùy chỉnh"
 title.en = "Custom Damage Effect"
 title.ko = "커스텀 대미지 효과"
 title.fr = "Effet de Dégâts Personnalisé"
@@ -186,6 +215,7 @@ title.ru = "Кастомный эффект урона"
 title.ja = "カスタムダメージ演出"
 
 [options.custom_life_bar]
+title.vi = "Thanh Life tùy chỉnh"
 title.en = "Custom Life Bar"
 title.ko = "커스텀 라이프 바"
 title.fr = "Barre de Vie Personnalisée"
@@ -193,6 +223,7 @@ title.ru = "Кастомная шкала жизни"
 title.ja = "カスタムライフバー"
 
 [options.custom_score_bar]
+title.vi = "Thanh điểm tùy chỉnh"
 title.en = "Custom Score Bar"
 title.ko = "커스텀 점수 바"
 title.fr = "Barre de Score Personnalisée"
@@ -200,6 +231,8 @@ title.ru = "Кастомная шкала счёта"
 title.ja = "カスタムスコアバー"
 
 [options.custom_tag]
+title.vi = "Thẻ tùy chỉnh"
+description.vi = "Hiển thị các thẻ đặc biệt (ví dụ: Auto Live) trong chế độ Watch."
 title.en = "Custom Tag"
 title.ko = "커스텀 태그"
 title.fr = "Tag Personnalisé"
@@ -212,6 +245,7 @@ description.ru = "Отображает специальный тэг (к при�
 description.ja = "Watchモード中に特殊なタグ（例：Auto Live）を表示します。"
 
 [options.ui_intro]
+title.vi = "Hiệu ứng UI mở đầu"
 title.en = "UI Intro Effect"
 title.ko = "UI 인트로 효과"
 title.fr = "Effet d'Introduction de l'Interface"
@@ -219,6 +253,8 @@ title.ru = "Эффект UI интро"
 title.ja = "UIイントロ演出"
 
 [options.note_perspective]
+title.vi = "Phối cảnh Note"
+description.vi = "Thiết lập phối cảnh của Note. Càng gần 0, Note càng được vẽ theo chiều dọc."
 title.en = "Note Perspective"
 title.ko = "노트 원근감"
 title.fr = "Perspective des Notes"
@@ -231,6 +267,7 @@ description.ru = "Ставит перспективу нот. Приближая
 description.ja = "ノーツの遠近感を設定します。0に近づくほど、ノーツは垂直に描画されます。"
 
 [options.prevent_empty_lane_sfx]
+title.vi = "Ngăn ghi đè hiệu ứng Lane trống"
 title.en = "Prevent Empty Lane Effect Overwrite"
 title.ko = "빈 레인 효과 덮어쓰기 방지"
 title.fr = "Empêcher l'Écrasement de l'Effet d'une Lane Vide"
@@ -238,6 +275,7 @@ title.ru = "Предотвратить перепись эффекта пуст�
 title.ja = "空レーンエフェクトの上書き防止"
 
 [options.stage_cover_mode]
+title.vi = "Kiểu tường chắn"
 title.en = "Note Start Point Mode"
 title.ko = "노트 시작 위치 모드"
 title.fr = "Mode du Point de Départ des Notes"
@@ -245,6 +283,7 @@ title.ru = "Режим точки начала нот"
 title.ja = "ノーツ開始位置モード"
 
 [options.stage_cover_alpha]
+title.vi = "Độ trong suốt điểm bắt đầu Note"
 title.en = "Note Start Point Transparency"
 title.ko = "노트 시작 위치 불투명도"
 title.fr = "Transparence du Point de Départ des Notes"
@@ -252,6 +291,9 @@ title.ru = "Прозрачность точки начала нот"
 title.ja = "ノーツ開始位置の不透明度"
 
 [options.stage_cover_mode.values]
+stage.vi = "Sàn"
+stage_and_line.vi = "Sàn & Đường viền"
+full_width.vi = "Toàn bộ chiều ngang"
 stage.en = "Stage"
 stage.ko = "스테이지"
 stage.fr = "Scène"
@@ -269,6 +311,8 @@ full_width.ru = "Полная широта"
 full_width.ja = "全幅"
 
 [options.stage_cover_scroll_speed_compensation]
+title.vi = "Bù trừ tốc độ Note khi có tường chắn"
+description.vi = "Tự động giảm tốc độ Note để bù trừ cho phần diện tích hiển thị bị rút ngắn bởi tường chắn.\n\n- Chế độ Toàn bộ: Tất cả các Note đều được giảm tốc độ sao cho thời gian chạy trên màn hình của mỗi Note đều được giữ nguyên so với khi không có tường chắn.\n- Chế độ Mặc định: Chỉ các Note Group với tốc độ Note đặt trước sẽ được bù trừ để bảo đảm hiển thị toàn vẹn các Note Group đó khi có tường chắn, các Note khác không bị tác động."
 title.en = "Note Start Point Note Speed Compensation"
 title.ko = "노트 시작 위치 노트 속도 보정"
 title.fr = "Compensation de la Vitesse des Notes au Point de Départ"
@@ -281,6 +325,9 @@ description.ru = "Снижает скорость нот, чтобы компе�
 description.ja = "ノーツ開始位置によって表示領域が狭くなる分、ノーツ速度を下げて補正します。"
 
 [options.stage_cover_scroll_speed_compensation.values]
+off.vi = "Tắt"
+fixed_only.vi = "Mặc định"
+full.vi = "Toàn bộ"
 off.en = "Off"
 off.ko = "사용 안 함"
 off.fr = "Désactivée"
@@ -298,6 +345,7 @@ full.ru = "Полный"
 full.ja = "全体"
 
 [options.hide_ui]
+title.vi = "Ẩn giao diện"
 title.en = "Hide UI"
 title.ko = "UI 숨기기"
 title.fr = "Masquer l'Interface"
@@ -305,6 +353,10 @@ title.ru = "Спрятать UI"
 title.ja = "UIを非表示"
 
 [options.hide_ui.values]
+none.vi = "Không"
+sonolus.vi = "Sonolus"
+sonolus_and_custom_judgment.vi = "Sonolus + Phán định tùy chỉnh"
+all.vi = "Tất cả"
 none.en = "None"
 none.ko = "숨기지 않음"
 none.fr = "Aucun"
@@ -327,6 +379,7 @@ all.ru = "Всё"
 all.ja = "すべて"
 
 [options.slide_quality]
+title.vi = "Độ mượt đường nối Note giữ"
 title.en = "Slide Quality"
 title.ko = "롱 노트 품질"
 title.fr = "Qualité des Slides"
@@ -334,6 +387,7 @@ title.ru = "Качество слайда"
 title.ja = "ロングノーツの品質"
 
 [options.guide_quality]
+title.vi = "Độ mượt đường Guide"
 title.en = "Guide Quality"
 title.ko = "가이드 품질"
 title.fr = "Qualité des Guides"
@@ -341,6 +395,8 @@ title.ru = "Качество гайда"
 title.ja = "ガイドの品質"
 
 [options.note_margin]
+title.vi = "Cách lề Note"
+description.vi = "Giảm chiều rộng hiển thị của Note để các Note liền kề nhau không bị dính sát nhau và dễ nhìn hơn."
 title.en = "Note Margin"
 title.ko = "노트 여백"
 title.fr = "Marge des Notes"
@@ -353,6 +409,8 @@ description.ru = "Сокращает нарисованную широту но�
 description.ja = "隣接するノーツを見分けやすくするため、描画されるノーツの幅を狭めます。"
 
 [options.preview_display_mode]
+title.vi = "Chế độ hiển thị Preview"
+description.vi = "Điều chỉnh cách đặt Note trong preview. 'Ingame' sử dụng khoảng cách theo tốc độ Note."
 title.en = "Preview Display Mode"
 title.ko = "프리뷰 표시 방식"
 title.fr = "Mode d'Affichage de la Prévisualisation"
@@ -365,6 +423,8 @@ description.ru = "Контролирует превью расположения
 description.ja = "プレビューでのノーツ配置を設定します。「ゲーム内」ではノーツ速度に基づく間隔を使用します。"
 
 [options.preview_display_mode.values]
+editor.vi = "Editor"
+ingame.vi = "Ingame"
 editor.en = "Editor"
 editor.ko = "에디터"
 editor.fr = "Éditeur"
@@ -377,6 +437,7 @@ ingame.ru = "Внутри-игровой"
 ingame.ja = "ゲーム内"
 
 [options.effect_animation_speed]
+title.vi = "Tốc độ hoạt ảnh hiệu ứng"
 title.en = "Effect Animation Speed"
 title.ko = "이펙트 애니메이션 속도"
 title.fr = "Vitesse des Animations d'Effets"
@@ -384,6 +445,7 @@ title.ru = "Скорость анимации эффекта"
 title.ja = "エフェクトアニメーション速度"
 
 [options.alternative_approach_curve]
+title.vi = "Sử dụng kiểu hàm tiếp cận thay thế"
 title.en = "Alternative Approach Curve"
 title.ko = "대체 접근 곡선 사용"
 title.fr = "Courbe d'Approche Alternative"
@@ -391,6 +453,7 @@ title.ru = "Альтернативный подход изгиба"
 title.ja = "代替アプローチ曲線"
 
 [options.disable_timescale]
+title.vi = "Vô hiệu hóa hiệu ứng biến đổi tốc độ Note"
 title.en = "Disable Timescale"
 title.ko = "시간 배율 비활성화"
 title.fr = "Désactiver l'Échelle de Temps"
@@ -398,6 +461,7 @@ title.ru = "Отключить таймскейл"
 title.ja = "タイムスケールを無効化"
 
 [options.disable_fake_notes]
+title.vi = "Vô hiệu hóa Note giả"
 title.en = "Disable Fake Notes"
 title.ko = "가짜 노트 비활성화"
 title.fr = "Désactiver les Fausses Notes"
@@ -405,6 +469,8 @@ title.ru = "Отключить фейк ноты"
 title.ja = "フェイクノーツを無効化"
 
 [options.forced_fever_chance]
+title.vi = "Buộc bật Fever Chance"
+description.vi = "Bật Fever Chance ngay cả khi chơi solo."
 title.en = "Forced Fever Chance"
 title.ko = "피버 찬스 강제 활성화"
 title.fr = "Fever Chance Forcée"
@@ -417,6 +483,7 @@ description.ru = "Включает шанс лихорадки даже в со�
 description.ja = "ソロプレイでもフィーバーチャンスを有効にします。"
 
 [options.skill_mode]
+title.vi = "Chế độ Skill"
 title.en = "Skill Mode"
 title.ko = "스킬 모드"
 title.fr = "Mode de Compétence"
@@ -424,6 +491,10 @@ title.ru = "Режим скилла"
 title.ja = "スキルモード"
 
 [options.skill_mode.values]
+level_default.vi = "Mặc định của Level"
+score_up.vi = "Tăng điểm"
+life_up.vi = "Hồi Life"
+accuracy_up.vi = "Tăng độ chính xác"
 level_default.en = "Level Default"
 level_default.ko = "레벨 기본값"
 level_default.fr = "Par Défaut du Niveau"
@@ -446,6 +517,7 @@ accuracy_up.ru = "Повышена Аккуратность"
 accuracy_up.ja = "判定強化"
 
 [options.score_mode]
+title.vi = "Chế độ tính điểm"
 title.en = "Score Mode"
 title.ko = "점수 모드"
 title.fr = "Mode de Score"
@@ -453,6 +525,10 @@ title.ru = "Режим счёта"
 title.ja = "スコアモード"
 
 [options.score_mode.values]
+weighted_flat.vi = "Có trọng số + Không thưởng Combo"
+weighted_combo.vi = "Có trọng số + Thưởng Combo (SEKAI Tiêu chuẩn)"
+unweighted_flat.vi = "Không trọng số + Không thưởng Combo (SEKAI Đấu hạng)"
+unweighted_combo.vi = "Không trọng số + Thưởng Combo"
 weighted_flat.en = "Weighted Flat"
 weighted_flat.ko = "가중치 적용 · 고정 배점"
 weighted_flat.fr = "Pondéré · Fixe"
@@ -475,6 +551,7 @@ unweighted_combo.ru = "Невзвешенное комбо"
 unweighted_combo.ja = "均等・コンボ"
 
 [options.show_hitboxes]
+title.vi = "Hiển thị Hitbox"
 title.en = "Show Hitboxes"
 title.ko = "판정 범위 표시"
 title.fr = "Afficher les Hitboxes"
@@ -482,6 +559,7 @@ title.ru = "Показать хитбоксы"
 title.ja = "判定範囲を表示"
 
 [options.background_auto_correction]
+title.vi = "Tự động điều chỉnh nền"
 title.en = "Background Auto Correction"
 title.ko = "배경 자동 보정"
 title.fr = "Correction Automatique de l'Arrière-plan"
@@ -489,6 +567,7 @@ title.ru = "Авто-коррекция заднего фона"
 title.ja = "背景の自動補正"
 
 [options.hitbox_range]
+title.vi = "Hitbox"
 title.en = "Hitbox"
 title.ko = "판정 범위"
 title.fr = "Hitbox"
@@ -496,6 +575,9 @@ title.ru = "Хитбокс"
 title.ja = "判定範囲"
 
 [options.hitbox_range.values]
+default.vi = "Mặc định"
+full_vertical.vi = "Toàn bộ chiều dọc"
+full_adaptive.vi = "Toàn bộ thích ứng"
 default.en = "Default"
 default.ko = "기본"
 default.fr = "Par Défaut"
@@ -513,6 +595,8 @@ full_adaptive.ru = "Полностью адаптированный"
 full_adaptive.ja = "全域適応"
 
 [options.test_aspect_ratio]
+title.vi = "Hiển thị tỷ lệ màn hình thử nghiệm"
+description.vi = "Hiển thị khung tham chiếu cho các tỷ lệ màn hình 21:9, 16:9 và 4:3."
 title.en = "Test Aspect Ratio"
 title.ko = "화면비 테스트"
 title.fr = "Tester le Format d'Image"
@@ -520,6 +604,15 @@ title.ru = "Протестировать соотношение сторон"
 title.ja = "アスペクト比をテスト"
 description.en = "Draws reference boxes for 21:9, 16:9, and 4:3 screens."
 description.ko = "21:9, 16:9, 4:3 화면의 기준 상자를 표시합니다."
-description.fr = "Affiche des repères pour les écrans 21:9, 16:9 et 4:3."
+ description.fr = "Affiche des repères pour les écrans 21:9, 16:9 et 4:3."
 description.ru = "Рисует референсные 'коробки' для экранов на 21:9, 16:9 и 4:3."
 description.ja = "21:9、16:9、4:3画面の基準ボックスを描画します。"
+[options.edge_touch_correction]
+title.en = "Edge Touch Correction"
+description.en = "Adjusts touches outside the 16:9 play area on low aspect ratio devices to the nearest edge to avoid misses."
+
+[options.allow_debug_options_in_play_mode]
+title.vi = "Cho phép tùy chọn Debug trong Play"
+description.vi = "Cho phép Hiển thị Hitbox và Kiểm tra tỷ lệ màn hình có hiệu lực trong chế độ Play."
+title.en = "Allow Debug Options in Play Mode"
+description.en = "Allows Show Hitboxes and Test Aspect Ratio to take effect in play mode."

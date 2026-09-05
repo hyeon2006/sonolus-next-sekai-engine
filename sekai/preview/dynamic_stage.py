@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from math import pi
 
-from sonolus.script.archetype import EntityRef, PreviewArchetype, StandardImport, callback, entity_data, imported
+from sonolus.script.archetype import (
+    EntityRef,
+    PreviewArchetype,
+    StandardImport,
+    callback,
+    entity_data,
+    imported,
+    shared_memory,
+)
 from sonolus.script.interval import clamp
 from sonolus.script.timing import beat_to_bpm, beat_to_time
 
@@ -120,6 +128,7 @@ class PreviewStageMaskChange(PreviewArchetype, BaseEvent):
     beat: StandardImport.BEAT
     lane: float = imported()
     size: float = imported()
+    mask_notes: bool = imported(name="maskNotes", default=False)
     ease: EaseType = imported()
     next_ref: EntityRef[PreviewStageMaskChange] = imported(name="next")
 
@@ -174,7 +183,7 @@ class PreviewStageStyleChange(PreviewArchetype, BaseEvent):
     ease: EaseType = imported()
     next_ref: EntityRef[PreviewStageStyleChange] = imported(name="next")
 
-    time: float = entity_data()
+    time: float = shared_memory()
 
     @callback(order=-3)
     def preprocess(self):

@@ -577,7 +577,7 @@ def get_next_camera_event_time(t: float) -> float:
 
 
 def test_aspect_active() -> bool:
-    return Options.test_aspect_ratio and (is_play() or is_watch())
+    return Options.test_aspect_ratio and (is_watch() or (is_play() and Options.allow_debug_options_in_play_mode))
 
 
 def refresh_layout():
@@ -2123,7 +2123,10 @@ def compute_hitbox_at_time(
 
 def segment_closeness_score(p: Vec2, seg: HitboxTarget) -> float:
     d = seg.r - seg.l
-    t = clamp((p - seg.l).dot(d) / d.dot(d), 0.0, 1.0)
+    length_squared = d.dot(d)
+    if length_squared == 0:
+        return -(p - seg.l).magnitude
+    t = clamp((p - seg.l).dot(d) / length_squared, 0.0, 1.0)
     return -(p - (seg.l + d * t)).magnitude
 
 

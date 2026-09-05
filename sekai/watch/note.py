@@ -12,15 +12,21 @@ from sonolus.script.archetype import (
     shared_memory,
 )
 from sonolus.script.bucket import Judgment
-from sonolus.script.interval import lerp, remap_clamped, unlerp_clamped
+from sonolus.script.interval import lerp
 from sonolus.script.quad import Quad
 from sonolus.script.runtime import is_replay, is_skip, time
 from sonolus.script.timing import beat_to_time
 
 from sekai.debug import DISABLE_NOTES
 from sekai.lib.buckets import SekaiWindow
-from sekai.lib.connector import ActiveConnectorInfo, ConnectorKind, ConnectorLayer, SegmentPresentation
-from sekai.lib.ease import EaseType, ease
+from sekai.lib.connector import (
+    ActiveConnectorInfo,
+    ConnectorKind,
+    ConnectorLayer,
+    SegmentPresentation,
+    get_connector_fractions,
+)
+from sekai.lib.ease import EaseType
 from sekai.lib.layout import (
     FlickDirection,
     Hitbox,
@@ -39,6 +45,8 @@ from sekai.lib.note import (
     damage_tick_input_start_beat,
     draw_hitbox_overlay,
     draw_note,
+    get_attach_eased_frac,
+    get_attach_frac,
     get_attach_params,
     get_leniency,
     get_note_bucket,
@@ -56,7 +64,16 @@ from sekai.lib.note import (
     schedule_note_slot_effects,
 )
 from sekai.lib.options import Options
-from sekai.lib.stage import DivisionParity, JudgeLineStyle, get_stage_props, resolve_judge_line_style
+from sekai.lib.stage import (
+    DivisionParity,
+    JudgeLineStyle,
+    VisualMask,
+    get_stage_props,
+    interpolate_visual_masks,
+    masked_note_extents,
+    masked_note_extents_by_limits,
+    resolve_judge_line_style,
+)
 from sekai.lib.timescale import (
     CompositeTime,
     group_force_note_speed,
@@ -169,8 +186,8 @@ class WatchBaseNote(WatchArchetype):
             # attach_head.init_data()
             # attach_tail.init_data()
             self.connector_ease = attach_head.connector_ease
-            self.attach_eased_frac = ease(
-                self.connector_ease, unlerp_clamped(attach_head.target_time, attach_tail.target_time, self.target_time)
+            self.attach_eased_frac = get_attach_eased_frac(
+                self.connector_ease, attach_head.target_time, attach_tail.target_time, self.target_time
             )
             lane, size = get_attach_params(
                 ease_type=attach_head.connector_ease,
@@ -186,18 +203,17 @@ class WatchBaseNote(WatchArchetype):
             self.size = size
             self.visual_start_time = min(attach_head.visual_start_time, attach_tail.visual_start_time)
             self.start_time = self.visual_start_time
-            self.target_y_offset = remap_clamped(
-                attach_head.target_time,
-                attach_tail.target_time,
+            self.target_y_offset = lerp(
                 attach_head._basic_y_offset_at(self.target_time, left_limit=True),
                 attach_tail._basic_y_offset_at(self.target_time, left_limit=True),
-                self.target_time,
+                get_attach_frac(attach_head.target_time, attach_tail.target_time, self.target_time),
             )
 
         if self.is_scored:
+            hitbox_lane, hitbox_size = self.visual_extents_at(self.target_time, left_limit=True)
             self.hitbox @= compute_hitbox_at_time(
-                self.lane,
-                self.size,
+                hitbox_lane,
+                hitbox_size,
                 get_leniency(self.kind),
                 self.target_time,
                 self.target_y_offset,
@@ -303,17 +319,23 @@ class WatchBaseNote(WatchArchetype):
                     props.lane,
                     props.center_weight,
                 )
+            render_size = self.size
+            if not self.is_attached:
+                visual_lane, render_size = masked_note_extents(visual_lane, self.size, props)
         else:
             pivot_lane = 0.0
             y_offset = 0.0
             half_offset = False
             single_line = False
             visual_lane = self.visual_lane_at(t)
+            render_size = self.size
             transform @= self.stage_transform_at(t)
+        if self.is_attached:
+            visual_lane, render_size = self.visual_extents_at(t)
         schedule_note_slot_effects(
             self.kind,
             visual_lane,
-            self.size,
+            render_size,
             t,
             self.direction,
             self.judgment,
@@ -362,6 +384,9 @@ class WatchBaseNote(WatchArchetype):
             return
         if self.not_render:
             return
+        render_lane, render_size = self.visual_extents
+        if render_size <= 0:
+            return
         stage_transform = +StageTransform
         if self.has_stage_transform():
             stage_transform @= self.visual_stage_transform()
@@ -369,8 +394,8 @@ class WatchBaseNote(WatchArchetype):
             stage_transform @= identity_stage_transform()
         draw_note(
             self.kind,
-            self.visual_lane,
-            self.size,
+            render_lane,
+            render_size,
             self.visual_progress,
             self.direction,
             self.target_time,
@@ -441,11 +466,12 @@ class WatchBaseNote(WatchArchetype):
         if time() < self.despawn_time():
             return
         if (not is_replay() or self.played_hit_effects) and self.is_scored:
+            render_lane, render_size = self.visual_extents
             play_note_hit_effects(
                 self.kind,
                 self.effect_kind,
-                self.visual_lane,
-                self.size,
+                render_lane,
+                render_size,
                 self.direction,
                 self.judgment,
                 y_offset=self.visual_y_offset,
@@ -459,7 +485,7 @@ class WatchBaseNote(WatchArchetype):
         if self.stage_ref.index <= 0:
             return self.lane
         stage = self.stage_ref.get()
-        if t == stage.props_time:
+        if t == time():
             return stage.props.pivot_lane + self.rel_lane
         return get_stage_props(stage, t).pivot_lane + self.rel_lane
 
@@ -482,12 +508,10 @@ class WatchBaseNote(WatchArchetype):
         if self.is_attached:
             head = self.attach_head_ref.get()
             tail = self.attach_tail_ref.get()
-            return remap_clamped(
-                head.target_time,
-                tail.target_time,
+            return lerp(
                 head._basic_visual_note_alpha,
                 tail._basic_visual_note_alpha,
-                self.target_time,
+                get_attach_frac(head.target_time, tail.target_time, self.target_time),
             )
         return self._basic_visual_note_alpha
 
@@ -496,18 +520,16 @@ class WatchBaseNote(WatchArchetype):
             return 0.0
         return get_stage_props(self.stage_ref.get(), t, left_limit=left_limit).y_offset
 
-    def y_offset_at(self, t: float) -> float:
+    def y_offset_at(self, t: float, left_limit: bool = False) -> float:
         if self.is_attached:
             head = self.attach_head_ref.get()
             tail = self.attach_tail_ref.get()
-            return remap_clamped(
-                head.target_time,
-                tail.target_time,
-                head._basic_y_offset_at(t),
-                tail._basic_y_offset_at(t),
-                self.target_time,
+            return lerp(
+                head._basic_y_offset_at(t, left_limit=left_limit),
+                tail._basic_y_offset_at(t, left_limit=left_limit),
+                get_attach_frac(head.target_time, tail.target_time, self.target_time),
             )
-        return self._basic_y_offset_at(t)
+        return self._basic_y_offset_at(t, left_limit=left_limit)
 
     def _basic_visual_stage_transform(self) -> StageTransform:
         result = +StageTransform
@@ -566,7 +588,7 @@ class WatchBaseNote(WatchArchetype):
             result @= blend_stage_transform(
                 head._basic_stage_transform_at(t, left_limit=left_limit),
                 tail._basic_stage_transform_at(t, left_limit=left_limit),
-                remap_clamped(head.target_time, tail.target_time, 0.0, 1.0, self.target_time),
+                get_attach_eased_frac(self.connector_ease, head.target_time, tail.target_time, self.target_time),
             )
         else:
             result @= self._basic_stage_transform_at(t, left_limit=left_limit)
@@ -600,6 +622,41 @@ class WatchBaseNote(WatchArchetype):
     def visual_lane(self) -> float:
         return self.visual_lane_at(time())
 
+    def _basic_visual_mask_at(self, t: float, left_limit: bool = False) -> VisualMask:
+        result = +VisualMask
+        if self.stage_ref.index > 0:
+            props = get_stage_props(self.stage_ref.get(), t, left_limit=left_limit)
+            result.left = props.lane - props.width
+            result.right = props.lane + props.width
+            result.enabled = props.mask_notes
+            if result.enabled:
+                result.stage_index = self.stage_ref.index
+        return result
+
+    def visual_mask_at(self, t: float, left_limit: bool = False) -> VisualMask:
+        result = +VisualMask
+        if not self.is_attached:
+            result @= self._basic_visual_mask_at(t, left_limit=left_limit)
+            return result
+
+        head_mask = self.attach_head_ref.get()._basic_visual_mask_at(t, left_limit=left_limit)
+        tail_mask = self.attach_tail_ref.get()._basic_visual_mask_at(t, left_limit=left_limit)
+        result @= interpolate_visual_masks(head_mask, tail_mask, self.attach_eased_frac)
+        return result
+
+    @property
+    def visual_mask(self) -> VisualMask:
+        return self.visual_mask_at(time())
+
+    def visual_extents_at(self, t: float, left_limit: bool = False) -> tuple[float, float]:
+        render_lane = self.visual_lane_at(t)
+        mask = self.visual_mask_at(t, left_limit=left_limit)
+        return masked_note_extents_by_limits(render_lane, self.size, mask.left, mask.right, mask.enabled)
+
+    @property
+    def visual_extents(self) -> tuple[float, float]:
+        return self.visual_extents_at(time())
+
     @property
     def _basic_visual_y_offset(self) -> float:
         if self.stage_ref.index > 0:
@@ -612,12 +669,10 @@ class WatchBaseNote(WatchArchetype):
         if self.is_attached:
             head = self.attach_head_ref.get()
             tail = self.attach_tail_ref.get()
-            return remap_clamped(
-                head.target_time,
-                tail.target_time,
+            return lerp(
                 head._basic_visual_y_offset,
                 tail._basic_visual_y_offset,
-                self.target_time,
+                get_attach_frac(head.target_time, tail.target_time, self.target_time),
             )
         return self._basic_visual_y_offset
 
@@ -659,11 +714,11 @@ class WatchBaseNote(WatchArchetype):
             head_frac = (
                 0.0
                 if current_time < attach_head.target_time
-                else unlerp_clamped(attach_head.target_time, attach_tail.target_time, current_time)
+                else get_attach_frac(attach_head.target_time, attach_tail.target_time, current_time)
             )
             tail_frac = 1.0
-            frac = unlerp_clamped(attach_head.target_time, attach_tail.target_time, self.target_time)
-            return remap_clamped(head_frac, tail_frac, head_progress, tail_progress, frac)
+            frac = get_attach_frac(attach_head.target_time, attach_tail.target_time, self.target_time)
+            return lerp(head_progress, tail_progress, get_attach_frac(head_frac, tail_frac, frac))
         else:
             return progress_to(
                 self.target_scaled_time,
@@ -678,7 +733,7 @@ class WatchBaseNote(WatchArchetype):
     @property
     def head_ease_frac(self) -> float:
         if self.is_attached:
-            return unlerp_clamped(
+            return get_attach_frac(
                 self.attach_head_ref.get().target_time, self.attach_tail_ref.get().target_time, self.target_time
             )
         else:
@@ -687,7 +742,7 @@ class WatchBaseNote(WatchArchetype):
     @property
     def tail_ease_frac(self) -> float:
         if self.is_attached:
-            return unlerp_clamped(
+            return get_attach_frac(
                 self.attach_head_ref.get().target_time, self.attach_tail_ref.get().target_time, self.target_time
             )
         else:
@@ -715,32 +770,40 @@ class WatchBaseNote(WatchArchetype):
 def compute_slide_input_bounds(
     ease_type: EaseType, head: WatchBaseNote, tail: WatchBaseNote, t: float, leniency: float
 ) -> Quad:
-    eff_head = head.effective_attach_head
-    eff_tail = tail.effective_attach_tail
-    input_lane, input_size = get_attach_params(
-        ease_type=ease_type,
-        head_lane=eff_head._basic_visual_lane_at(t),
-        head_size=eff_head.size,
-        head_target_time=eff_head.target_time,
-        tail_lane=eff_tail._basic_visual_lane_at(t),
-        tail_size=eff_tail.size,
-        tail_target_time=eff_tail.target_time,
-        target_time=t,
-    )
-    input_y_offset = remap_clamped(
+    input_frac, input_interp_frac = get_connector_fractions(
+        ease_type,
         head.target_time,
+        head.head_ease_frac,
         tail.target_time,
-        head.y_offset_at(t),
-        tail.y_offset_at(t),
+        tail.tail_ease_frac,
         t,
     )
+    input_lane = lerp(head.visual_lane_at(t), tail.visual_lane_at(t), input_interp_frac)
+    input_size = lerp(head.size, tail.size, input_interp_frac)
+    input_mask = interpolate_visual_masks(
+        head.visual_mask_at(t, left_limit=True),
+        tail.visual_mask_at(t, left_limit=True),
+        input_interp_frac,
+    )
+    input_lane, input_size = masked_note_extents_by_limits(
+        input_lane,
+        input_size,
+        input_mask.left,
+        input_mask.right,
+        input_mask.enabled,
+    )
+    input_y_offset = lerp(
+        head.y_offset_at(t, left_limit=True),
+        tail.y_offset_at(t, left_limit=True),
+        input_frac,
+    )
     input_transform = blend_stage_transform(
-        head._basic_stage_transform_at(t),
-        tail._basic_stage_transform_at(t),
-        unlerp_clamped(head.target_time, tail.target_time, t),
+        head.stage_transform_at(t, left_limit=True),
+        tail.stage_transform_at(t, left_limit=True),
+        input_interp_frac,
     )
     return compute_hitbox(
-        camera_layout_transform_at_time(t),
+        camera_layout_transform_at_time(t, left_limit=True),
         input_lane,
         input_size,
         leniency,

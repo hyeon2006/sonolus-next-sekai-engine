@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-from sonolus.script.options import select_option, slider_option, toggle_option
+from sonolus.script.options import OptionCategory, select_option, slider_option, toggle_option
 from sonolus.script.text import StandardText
 
 from sekai.lib.localization import localized_options
@@ -68,8 +68,15 @@ class PreviewDisplayMode(IntEnum):
 
 @localized_options
 class Options:
+    gameplay = OptionCategory(title=StandardText.GAMEPLAY)
+    graphics = OptionCategory(title=StandardText.GRAPHICS)
+    ui = OptionCategory(title=StandardText.UI)
+    audio = OptionCategory(title=StandardText.AUDIO)
+    miscellaneous = OptionCategory(title=StandardText.MISCELLANEOUS)
+
     speed: float = slider_option(
         name=StandardText.SPEED,
+        category=gameplay,
         standard=True,
         advanced=True,
         default=1,
@@ -80,6 +87,7 @@ class Options:
     )
     note_speed: float = slider_option(
         name=StandardText.NOTE_SPEED,
+        category=gameplay,
         scope="Sekai",
         default=6,
         min=1,
@@ -88,6 +96,7 @@ class Options:
     )
     stage_cover: float = slider_option(
         name=StandardText.STAGE_COVER_VERTICAL,
+        category=graphics,
         advanced=True,
         scope="Sekai",
         default=0,
@@ -98,6 +107,7 @@ class Options:
     )
     slide_alpha: float = slider_option(
         name="Slide Alpha",
+        category=graphics,
         scope="Sekai",
         default=1,
         min=0,
@@ -107,6 +117,7 @@ class Options:
     )
     guide_alpha: float = slider_option(
         name="Guide Alpha",
+        category=graphics,
         scope="Sekai",
         default=0.6,
         min=0,
@@ -116,6 +127,7 @@ class Options:
     )
     background_alpha: float = slider_option(
         name=StandardText.STAGE_ALPHA,
+        category=graphics,
         scope="Sekai",
         default=1,
         min=0.5,
@@ -125,6 +137,7 @@ class Options:
     )
     lane_alpha: float = slider_option(
         name=StandardText.LANE_ALPHA,
+        category=graphics,
         scope="Sekai",
         default=1,
         min=0,
@@ -134,82 +147,98 @@ class Options:
     )
     fever_effect: int = select_option(
         name="Fever Effect",
+        category=graphics,
         scope="Rush",
         default=0,
         values=["default", "lightweight", "none"],
     )
     skill_effect: bool = toggle_option(
         name="Skill Effect",
+        category=graphics,
         scope="Rush",
         default=True,
     )
     sim_line_enabled: bool = toggle_option(
         name=StandardText.SIMLINE,
+        category=graphics,
         scope="Sekai",
         default=True,
     )
     ap_effect: bool = toggle_option(
         name="AP Effect",
+        category=graphics,
         scope="Rush",
         default=True,
     )
     custom_accuracy: bool = toggle_option(
         name="Late/Fast/Flick",
+        category=ui,
         scope="Rush",
         default=False,
     )
     mirror: bool = toggle_option(
         name=StandardText.MIRROR,
+        category=gameplay,
         default=False,
     )
     custom_combo: bool = toggle_option(
         name="Custom Combo",
+        category=ui,
         scope="Rush",
         default=True,
     )
     custom_score: int = select_option(
         name="Custom Score Indicator",
+        category=ui,
         scope="Rush",
         default=0,
         values=["disable", "arcade_positive", "arcade_negative", "accuracy"],
     )
     custom_judgment: bool = toggle_option(
         name="Custom Judgment",
+        category=ui,
         scope="Rush",
         default=True,
     )
     auto_judgment: bool = toggle_option(
         name="Auto Judgment Display",
+        category=ui,
         scope="Rush",
         default=True,
     )
     custom_damage: bool = toggle_option(
         name="Custom Damage Effect",
+        category=graphics,
         scope="Rush",
         default=True,
     )
     custom_life_bar: bool = toggle_option(
         name="Custom Life Bar",
+        category=ui,
         scope="Rush",
         default=True,
     )
     custom_score_bar: bool = toggle_option(
         name="Custom Score Bar",
+        category=ui,
         scope="Rush",
         default=True,
     )
     custom_tag: bool = toggle_option(
         name="Custom Tag",
+        category=ui,
         scope="Rush",
         default=True,
     )
     ui_intro: bool = toggle_option(
         name="UI Intro Effect",
+        category=ui,
         scope="Rush",
         default=True,
     )
     note_perspective: float = slider_option(
         name="Note Perspective",
+        category=graphics,
         scope="Rush",
         default=1,
         min=0,
@@ -218,26 +247,31 @@ class Options:
     )
     sfx_enabled: bool = toggle_option(
         name=StandardText.EFFECT,
+        category=audio,
         scope="Sekai",
         default=True,
     )
     auto_sfx: bool = toggle_option(
         name=StandardText.EFFECT_AUTO,
+        category=audio,
         scope="Sekai",
         default=False,
     )
     prevent_empty_lane_sfx: bool = toggle_option(
         name="Prevent Empty Lane Effect Overwrite",
+        category=audio,
         scope="Rush",
         default=False,
     )
     tap_haptics_enabled: bool = toggle_option(
         name=StandardText.HAPTIC,
+        category=gameplay,
         scope="Sekai",
         default=False,
     )
     vibrate_mode: VibrateMode = select_option(
         name="Vibration Mode",
+        category=gameplay,
         scope="Sekai",
         values=[
             "disabled",
@@ -248,11 +282,13 @@ class Options:
     )
     note_effect_enabled: bool = toggle_option(
         name=StandardText.NOTE_EFFECT,
+        category=graphics,
         scope="Sekai",
         default=True,
     )
     note_effect_size: float = slider_option(
         name=StandardText.NOTE_EFFECT_SIZE,
+        category=graphics,
         scope="Sekai",
         default=1,
         min=0.1,
@@ -262,26 +298,31 @@ class Options:
     )
     marker_animation: bool = toggle_option(
         name=StandardText.MARKER_ANIMATION,
+        category=graphics,
         scope="Sekai",
         default=True,
     )
     connector_animation: bool = toggle_option(
         name=StandardText.CONNECTOR_ANIMATION,
+        category=graphics,
         scope="Sekai",
         default=True,
     )
     lane_effect_enabled: bool = toggle_option(
         name=StandardText.LANE_EFFECT,
+        category=graphics,
         scope="Sekai",
         default=True,
     )
     slot_effect_enabled: bool = toggle_option(
         name=StandardText.SLOT_EFFECT,
+        category=graphics,
         scope="Sekai",
         default=True,
     )
     slot_effect_size: float = slider_option(
         name=StandardText.SLOT_EFFECT_SIZE,
+        category=graphics,
         scope="Sekai",
         default=1,
         min=0,
@@ -291,6 +332,7 @@ class Options:
     )
     stage_cover_mode: StageCoverMode = select_option(
         name="Stage Cover Mode",
+        category=graphics,
         advanced=True,
         scope="Sekai",
         values=[
@@ -302,6 +344,7 @@ class Options:
     )
     stage_cover_alpha: float = slider_option(
         name=StandardText.STAGE_COVER_ALPHA,
+        category=graphics,
         advanced=True,
         scope="Sekai",
         default=1,
@@ -312,6 +355,7 @@ class Options:
     )
     stage_cover_scroll_speed_compensation: StageCoverNoteSpeedCompensation = select_option(
         name="Stage Cover Note Speed Compensation",
+        category=graphics,
         advanced=True,
         scope="Sekai",
         values=[
@@ -323,6 +367,7 @@ class Options:
     )
     hidden: float = slider_option(
         name=StandardText.HIDDEN,
+        category=graphics,
         scope="Sekai",
         advanced=True,
         default=0,
@@ -333,22 +378,26 @@ class Options:
     )
     lock_stage_aspect_ratio: bool = toggle_option(
         name=StandardText.STAGE_ASPECTRATIO_LOCK,
+        category=graphics,
         scope="Sekai",
         default=True,
     )
     hide_ui: int = select_option(
         name="Hide UI",
+        category=ui,
         scope="Rush",
         default=0,
         values=["none", "sonolus", "sonolus_and_custom_judgment", "all"],
     )
     show_lane: bool = toggle_option(
         name=StandardText.STAGE,
+        category=graphics,
         scope="Sekai",
         default=True,
     )
     slide_quality: float = slider_option(
         name="Slide Quality",
+        category=graphics,
         scope="Next Sekai",
         default=1,
         min=0.5,
@@ -358,6 +407,7 @@ class Options:
     )
     guide_quality: float = slider_option(
         name="Guide Quality",
+        category=graphics,
         scope="Next Sekai",
         default=1,
         min=0.5,
@@ -367,6 +417,7 @@ class Options:
     )
     note_margin: float = slider_option(
         name="Note Margin",
+        category=graphics,
         scope="Next Sekai",
         default=0.0,
         min=0.0,
@@ -375,6 +426,7 @@ class Options:
     )
     preview_display_mode: PreviewDisplayMode = select_option(
         name="Preview Display Mode",
+        category=graphics,
         scope="Rush",
         values=[
             "editor",
@@ -384,6 +436,7 @@ class Options:
     )
     effect_animation_speed: float = slider_option(
         name="Effect Animation Speed",
+        category=graphics,
         scope="Next Sekai",
         default=1,
         min=0.25,
@@ -393,29 +446,34 @@ class Options:
     )
     alternative_approach_curve: bool = toggle_option(
         name="Alternative Approach Curve",
+        category=gameplay,
         advanced=True,
         default=False,
         scope="Next Sekai",
     )
     disable_timescale: bool = toggle_option(
         name="Disable Timescale",
+        category=gameplay,
         standard=True,
         advanced=True,
         default=False,
     )
     disable_fake_notes: bool = toggle_option(
         name="Disable Fake Notes",
+        category=gameplay,
         standard=True,
         advanced=True,
         default=False,
     )
     forced_fever_chance: bool = toggle_option(
         name="Forced Fever Chance",
+        category=gameplay,
         scope="Rush",
         default=False,
     )
     skill_mode: SkillMode = select_option(
         name="Skill Mode",
+        category=gameplay,
         scope="Rush",
         values=[
             "level_default",
@@ -428,6 +486,7 @@ class Options:
     )
     score_mode: ScoreMode = select_option(
         name="Score Mode",
+        category=gameplay,
         scope="Sekai",
         values=[
             "weighted_flat",
@@ -439,21 +498,29 @@ class Options:
         advanced=True,
         default=1,
     )
+    edge_touch_correction: bool = toggle_option(
+        name="Edge Touch Correction",
+        category=gameplay,
+        scope="Next Sekai",
+        default=True,
+    )
     show_hitboxes: bool = toggle_option(
         name="Show Hitboxes",
-        standard=True,
+        category=miscellaneous,
         advanced=True,
         scope="Next Sekai",
         default=False,
     )
     background_auto_correction: bool = toggle_option(
         name="Background Auto Correction",
+        category=graphics,
         scope="Rush",
         advanced=True,
         default=False,
     )
     hitbox_range: HitboxRange = select_option(
         name="Hitbox",
+        category=gameplay,
         advanced=True,
         scope="Rush",
         values=[
@@ -465,9 +532,16 @@ class Options:
     )
     test_aspect_ratio: bool = toggle_option(
         name="Test Aspect Ratio",
-        standard=True,
+        category=miscellaneous,
         advanced=True,
         scope="Next Sekai",
+        default=False,
+    )
+    allow_debug_options_in_play_mode: bool = toggle_option(
+        name="Allow Debug Options in Play Mode",
+        category=miscellaneous,
+        standard=True,
+        advanced=True,
         default=False,
     )
 
